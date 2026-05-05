@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=" />
+
+    <title>Hand Tracker</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <video id="camera" playsinline muted></video>
+    <canvas id="output"></canvas>
+
+    <div id="overlay" class="overlay">
+      <div class="setup">
+        <label for="ws-url">WebSocket</label>
+        <input id="ws-url" type="text" value="ws://192.168.1.100:8765" />
+        <button id="start" type="button">터치하여 시작하기</button>
+      </div>
+    </div>
+
+    <div class="hud">
+      <span id="status">대기</span>
+      <span id="metrics">speed 0.00 / openness 0.00</span>
+    </div>
+
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

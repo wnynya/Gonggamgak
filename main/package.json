@@ -1,0 +1,16 @@
+{
+  "name": "main",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon src/app.js -p 9990"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.20.0"
+  }
+}

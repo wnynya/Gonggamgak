@@ -1,0 +1,92 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+#camera {
+  display: none;
+}
+
+#output {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.overlay.is-hidden {
+  display: none;
+}
+
+.setup {
+  display: grid;
+  width: min(88vw, 420px);
+  gap: 12px;
+  text-align: center;
+}
+
+label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+input,
+button {
+  width: 100%;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font: inherit;
+}
+
+input {
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  padding: 0 12px;
+}
+
+button {
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.hud {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.35;
+  pointer-events: none;
+}

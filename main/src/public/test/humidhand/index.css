@@ -1,0 +1,52 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+#camera {
+  display: none;
+}
+
+#output {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+.start-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: clamp(22px, 5vw, 48px);
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  z-index: 10;
+}
+
+.start-overlay.is-loading {
+  cursor: default;
+}
+
+.start-overlay.is-hidden {
+  display: none;
+}
