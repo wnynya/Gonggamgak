@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=" />
+
+    <title>Speech Monitor</title>
+
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <main class="screen">
+      <section class="panel" aria-label="speech monitor">
+        <div class="topline">
+          <div>
+            <p class="label">SPEECH</p>
+            <h1>Mic Monitor</h1>
+          </div>
+          <div id="status" class="status">idle</div>
+        </div>
+
+        <div class="controls">
+          <button id="start" type="button">Start</button>
+          <button id="stop" type="button" disabled>Stop</button>
+          <button id="speak" type="button" disabled>Speak Text</button>
+        </div>
+
+        <div class="meters">
+          <div class="meter">
+            <div class="meter-head">
+              <span>Volume</span>
+              <strong id="volumeValue">0%</strong>
+            </div>
+            <div class="track" aria-hidden="true">
+              <div id="volumeBar" class="bar volume"></div>
+            </div>
+          </div>
+
+          <div class="meter">
+            <div class="meter-head">
+              <span>Speed</span>
+              <strong id="speedValue">0 tps</strong>
+            </div>
+            <div class="track" aria-hidden="true">
+              <div id="speedBar" class="bar speed"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="transcript">
+          <p class="label">TEXT</p>
+          <div id="finalText" class="final"></div>
+          <div id="interimText" class="interim"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

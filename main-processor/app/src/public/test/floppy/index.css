@@ -1,0 +1,111 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #171717;
+  color: #f8f5ed;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #83c9ef;
+}
+
+.hud {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.hud > div {
+  min-width: 96px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(20, 22, 24, 0.72);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+.label {
+  display: block;
+  margin-bottom: 4px;
+  color: #aee1ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.status {
+  min-width: 112px;
+  color: #e3ded2;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.status.is-open {
+  color: #132113;
+  background: #8ee884;
+}
+
+.score.is-hit {
+  background: rgba(255, 212, 90, 0.84);
+  color: #171717;
+}
+
+.score.is-hit .label {
+  color: #30501f;
+}
+
+@media (max-width: 520px) {
+  .hud {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .hud > div {
+    min-width: 76px;
+    padding: 8px 10px;
+  }
+
+  strong {
+    font-size: 23px;
+  }
+}

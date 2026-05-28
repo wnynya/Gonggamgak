@@ -1,0 +1,16 @@
+{
+  "name": "app-touch",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "1": "node app.js -n 1"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0",
+    "ws": "^8.20.0"
+  }
+}

@@ -45,7 +45,9 @@ function formatPort(port) {
     port.productId ? `PID ${port.productId}` : null,
   ].filter(Boolean);
 
-  return details.length > 0 ? `${port.path} (${details.join(', ')})` : port.path;
+  return details.length > 0
+    ? `${port.path} (${details.join(', ')})`
+    : port.path;
 }
 
 async function listSerialPorts() {
@@ -98,8 +100,8 @@ function connectWebSocket(serialPort, targetNumber) {
 
     try {
       const { event, data } = JSON.parse(text);
-
       if (event === 'smell-press' && isTargetData(data, targetNumber)) {
+        console.log('press');
         sendPress(serialPort);
       }
     } catch (error) {

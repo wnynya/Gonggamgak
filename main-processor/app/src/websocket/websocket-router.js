@@ -21,4 +21,7 @@ use('/smell', smell);
 use('/out1', out1);
 use('/webrtc', webrtc);
 
+import { press } from './wss.js';
+use('/press', press);
+
 export default websocket;

@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=" />
+
+    <title>Floppy Press</title>
+
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <canvas id="game" aria-label="press controlled floppy bird game"></canvas>
+      <div class="hud">
+        <div>
+          <span class="label">PRESS</span>
+          <strong id="value">0</strong>
+        </div>
+        <div class="score">
+          <span class="label">SCORE</span>
+          <strong id="score">0</strong>
+        </div>
+        <div id="status" class="status">connecting</div>
+      </div>
+    </main>
+
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

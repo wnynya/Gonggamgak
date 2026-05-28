@@ -7,6 +7,7 @@ const main = new WebSocketServer();
 const smell = new WebSocketServer();
 const out1 = new WebSocketServer();
 const webrtc = new WebSocketServer();
+const press = new WebSocketServer();
 
 hearing.on('message', (con, read) => {
   main.broadcast(read.data);
@@ -19,6 +20,10 @@ sight.on('message', (con, read) => {
 touch.on('message', (con, read) => {
   main.broadcast(read.data);
 });
+press.on('message', (con, read) => {
+  main.broadcast(read.data);
+});
+
 main.on('message', (con, read) => {
   console.log(read.data);
 });
@@ -55,4 +60,4 @@ webrtc.on('close', () => {
   console.log(`webrtc: client disconnected`);
 });
 
-export { hearing, sight, touch, main, smell, out1, webrtc };
+export { hearing, sight, touch, main, smell, out1, webrtc, press };
