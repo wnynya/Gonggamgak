@@ -21,10 +21,11 @@ let recognition = null;
 let animationFrame = null;
 let isListening = false;
 let finalText = '';
-let speechStartTime = 0;
 let currentText = '';
 let currentTps = 0;
 let currentGain = 0;
+let lastSpeechTime = 0;
+let lastSpeechText = '';
 
 const hearingWsc = new WebsocketClient('/hearing');
 
@@ -42,30 +43,45 @@ function countLetters(text) {
   return Array.from(text.replace(/\s/g, '')).length;
 }
 
-function setSpeed(speechText) {
+function setSpeed(speechText, now = performance.now(), updateBaseline = true) {
   const letterCount = countLetters(speechText);
 
-  if (!speechStartTime || letterCount === 0) {
+  if (!lastSpeechTime || letterCount === 0) {
     currentTps = 0;
     speedValueElement.textContent = '0 tps';
     speedBarElement.style.width = '0%';
+
+    if (updateBaseline && letterCount > 0) {
+      lastSpeechTime = now;
+      lastSpeechText = speechText;
+    }
+
     return;
   }
 
-  const seconds = Math.max((performance.now() - speechStartTime) / 1000, 0.1);
-  currentTps = letterCount / seconds;
+  const previousLength = countLetters(lastSpeechText);
+  const addedLetters = Math.max(letterCount - previousLength, letterCount);
+  const seconds = Math.max((now - lastSpeechTime) / 1000, 0.08);
+  currentTps = addedLetters / seconds;
   const percent = clamp((currentTps / 12) * 100, 0, 100);
 
   speedValueElement.textContent = `${currentTps.toFixed(1)} tps`;
   speedBarElement.style.width = `${percent}%`;
+  lastSpeechTime = now;
+  lastSpeechText = speechText;
 }
 
-function updateTranscript(interimText = '', speechText = interimText || finalText) {
+function updateTranscript(
+  interimText = '',
+  speechText = interimText || finalText,
+  now = performance.now(),
+  updateBaseline = true,
+) {
   finalTextElement.textContent = finalText;
   interimTextElement.textContent = interimText;
   speakButton.disabled = !finalText.trim();
   currentText = speechText.trim();
-  setSpeed(currentText);
+  setSpeed(currentText, now, updateBaseline);
 }
 
 function sendSpeechData() {
@@ -135,7 +151,8 @@ function startRecognition() {
 
   recognition.onstart = () => {
     isListening = true;
-    speechStartTime = performance.now();
+    lastSpeechTime = 0;
+    lastSpeechText = '';
     setStatus('listening', 'open');
   };
 
@@ -143,6 +160,7 @@ function startRecognition() {
     let interimText = '';
     let latestText = '';
     let hasInterimResult = false;
+    const now = performance.now();
 
     for (let index = event.resultIndex; index < event.results.length; index += 1) {
       const result = event.results[index];
@@ -157,7 +175,7 @@ function startRecognition() {
       }
     }
 
-    updateTranscript(interimText, interimText || latestText);
+    updateTranscript(interimText, interimText || latestText, now);
 
     if (hasInterimResult) {
       sendSpeechData();
@@ -188,7 +206,9 @@ async function start() {
     currentText = '';
     currentTps = 0;
     currentGain = 0;
-    updateTranscript();
+    lastSpeechTime = 0;
+    lastSpeechText = '';
+    updateTranscript('', '', performance.now(), false);
     await startAudio();
     startRecognition();
   } catch (error) {
