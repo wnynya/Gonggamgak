@@ -11,6 +11,7 @@ const press = new WebSocketServer();
 
 hearing.on('message', (con, read) => {
   main.broadcast(read.data);
+  out1.broadcast(read.data);
 });
 sight.on('message', (con, read) => {
   console.log(read.data);
@@ -19,9 +20,11 @@ sight.on('message', (con, read) => {
 });
 touch.on('message', (con, read) => {
   main.broadcast(read.data);
+  out1.broadcast(read.data);
 });
 press.on('message', (con, read) => {
   main.broadcast(read.data);
+  out1.broadcast(read.data);
 });
 
 main.on('message', (con, read) => {
