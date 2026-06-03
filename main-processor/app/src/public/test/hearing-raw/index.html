@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="data:imaZge/png;base64,iVBORw0KGgo=" />
+
+    <link rel="stylesheet" href="index.css" />
+
+    <title>청각 생 시각화</title>
+  </head>
+
+  <body>
+    <div class="display">
+      <div class="screen" id="wav">
+        <div class="layer background">
+          <canvas></canvas>
+        </div>
+        <div class="layer foreground"></div>
+      </div>
+
+      <div class="screen" id="fft">
+        <div class="layer background">
+          <canvas></canvas>
+        </div>
+        <div class="layer foreground"></div>
+      </div>
+
+      <div class="screen" id="spct">
+        <div class="layer background">
+          <canvas></canvas>
+        </div>
+        <div class="layer foreground"></div>
+      </div>
+
+      <div class="screen" id="xy">
+        <div class="layer background">
+          <canvas></canvas>
+        </div>
+        <div class="layer foreground"></div>
+      </div>
+
+      <div class="screen" id="cfft">
+        <div class="layer background">
+          <canvas></canvas>
+        </div>
+        <div class="layer foreground"></div>
+      </div>
+
+      <div class="screen" id="text">
+        <div class="layer background"></div>
+        <div class="layer foreground"></div>
+      </div>
+    </div>
+
+    <div class="controll">
+      <p>
+        <button id="start" type="button">AudioContext 시작</button>
+      </p>
+      <p>
+        <label for="audioInput">오디오 입력 장치 선택: </label>
+        <select id="audioInput">
+          <option value="">default</option>
+        </select>
+      </p>
+      <p>
+        <label for="inputGain">입력 gain: </label>
+        <input
+          id="inputGain"
+          type="range"
+          min="0"
+          max="10"
+          step="0.01"
+          value="3"
+        />
+        <span id="inputGainValue">1.00</span>
+      </p>
+      <p id="status">idle</p>
+    </div>
+
+    <div class="cover">
+      <p>클릭하여 시작하기</p>
+    </div>
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import WebsocketClient from '../../websocket-client.mjs';
+import WebsocketClient from '../../../websocket-client.mjs';
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -162,7 +162,11 @@ function startRecognition() {
     let hasInterimResult = false;
     const now = performance.now();
 
-    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+    for (
+      let index = event.resultIndex;
+      index < event.results.length;
+      index += 1
+    ) {
       const result = event.results[index];
       const text = result[0].transcript;
       latestText = text;

@@ -3,8 +3,10 @@ import WebSocketServer from './websocket-server.js';
 const hearing = new WebSocketServer();
 const sight = new WebSocketServer();
 const touch = new WebSocketServer();
+
 const main = new WebSocketServer();
 const smell = new WebSocketServer();
+
 const out1 = new WebSocketServer();
 const webrtc = new WebSocketServer();
 const press = new WebSocketServer();
@@ -14,7 +16,6 @@ hearing.on('message', (con, read) => {
   out1.broadcast(read.data);
 });
 sight.on('message', (con, read) => {
-  console.log(read.data);
   main.broadcast(read.data);
   out1.broadcast(read.data);
 });
@@ -22,11 +23,15 @@ touch.on('message', (con, read) => {
   main.broadcast(read.data);
   out1.broadcast(read.data);
 });
+
 press.on('message', (con, read) => {
   main.broadcast(read.data);
   out1.broadcast(read.data);
 });
 
+main.on('connection', (con) => {
+  console.log(`main: client connected`);
+});
 main.on('message', (con, read) => {
   console.log(read.data);
 });
@@ -37,6 +42,9 @@ main.on('json', (con, event, data, message) => {
       break;
     }
   }
+});
+main.on('close', (con) => {
+  console.log(`main: client disconnected`);
 });
 
 out1.on('connection', (con) => {
