@@ -24,4 +24,7 @@ use('/webrtc', webrtc);
 import { press } from './wss.js';
 use('/press', press);
 
+import { microwave } from './wss.js';
+use('/microwave', microwave);
+
 export default websocket;

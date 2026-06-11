@@ -1,0 +1,27 @@
+안녕하세요, 스테인레스 판재 / 파이프 레이저커팅 견적 문의드립니다.
+저번 주문 도면에서 세부 공차 수정이 있었어서 새로 도면 보내드립니다.
+
+dwg 1:1 파일입니다.
+
+layer_1_up.dwg - 2세트
+layer_1_down.dwg - 2세트
+layer_2_up.dwg - 2세트
+layer_2_down.dwg - 2세트
+layer_3.dwg - 3세트
+layer_4.dwg - 2세트
+spacer.dwg - 12세트
+위 도면들은 스테인레스 2T 판재 레이저커팅 필요합니다.
+
+wall_top_up.dwg - 2세트
+wall_top_down.dwg - 2세트
+wall_bottom_up.dwg - 2세트
+wall_bottom_down.dwg - 2세트
+wall_bottom_all.dwg - 4세트
+foot_up.dwg - 2세트
+foot_down.dwg - 2세트
+위 도면들은 스테인레스 4T 판재 레이저커팅 필요합니다.
+
+pipe - 3세트
+위 도면은 외경89.1mm 두께2.1T (호칭지름 80, 호칭두께 스케줄5S) 스테인레스 파이프 레이저커팅 필요합니다.
+(이전에 사용하고 남은 원장 사용)
+

@@ -10,6 +10,7 @@ const smell = new WebSocketServer();
 const out1 = new WebSocketServer();
 const webrtc = new WebSocketServer();
 const press = new WebSocketServer();
+const microwave = new WebSocketServer();
 
 hearing.on('message', (con, read) => {
   main.broadcast(read.data);
@@ -28,17 +29,22 @@ press.on('message', (con, read) => {
   main.broadcast(read.data);
   out1.broadcast(read.data);
 });
+microwave.on('message', (con, read) => {
+  main.broadcast(read.data);
+});
 
 main.on('connection', (con) => {
   console.log(`main: client connected`);
 });
-main.on('message', (con, read) => {
-  console.log(read.data);
-});
+main.on('message', (con, read) => {});
 main.on('json', (con, event, data, message) => {
   switch (event) {
     case 'smell-press': {
       smell.broadcast(JSON.stringify({ event, data, message }));
+      break;
+    }
+    case 'microwave': {
+      microwave.broadcast(JSON.stringify({ event, data, message }));
       break;
     }
   }
@@ -72,3 +78,4 @@ webrtc.on('close', () => {
 });
 
 export { hearing, sight, touch, main, smell, out1, webrtc, press };
+export { microwave };

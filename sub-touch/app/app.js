@@ -1,7 +1,12 @@
-import { ReadlineParser, SerialPort } from 'serialport';
+import { SerialPort } from 'serialport';
 import WebSocket from 'ws';
 
-const BAUD_RATE = 115200;
+const BAUD_RATE = 9600;
+const ROW_COUNT = 12;
+const COL_COUNT = 7;
+const CELL_COUNT = ROW_COUNT * COL_COUNT;
+const FRAME_HEADER = [0xaa, 0x55];
+const FRAME_SIZE = FRAME_HEADER.length + CELL_COUNT;
 const DEFAULT_WS_URL = 'ws://localhost:9990/touch';
 const RECONNECT_DELAY_MS = 1000;
 
@@ -73,6 +78,7 @@ async function openSerial(path) {
 function createWebSocketClient(url) {
   const state = {
     ws: null,
+    warnedNotReady: false,
   };
 
   function connect() {
@@ -80,6 +86,7 @@ function createWebSocketClient(url) {
     state.ws = ws;
 
     ws.on('open', () => {
+      state.warnedNotReady = false;
       console.log(`WebSocket connected: ${url}`);
     });
 
@@ -106,9 +113,10 @@ function createWebSocketClient(url) {
       const ws = state.ws;
 
       if (!ws || ws.readyState !== WebSocket.OPEN) {
-        console.warn(
-          `WebSocket not ready. Skipped touch matrix: ${JSON.stringify(data)}`,
-        );
+        if (!state.warnedNotReady) {
+          console.warn('WebSocket not ready. Console output only for now.');
+          state.warnedNotReady = true;
+        }
         return;
       }
 
@@ -121,52 +129,96 @@ function createWebSocketClient(url) {
 function isMatrixPayload(data) {
   return (
     data &&
-    data.rows === 2 &&
-    data.cols === 2 &&
+    data.rows === ROW_COUNT &&
+    data.cols === COL_COUNT &&
     Array.isArray(data.values) &&
-    data.values.length === 2 &&
+    data.values.length === ROW_COUNT &&
     data.values.every(
       (row) =>
         Array.isArray(row) &&
-        row.length === 2 &&
+        row.length === COL_COUNT &&
         row.every((value) => Number.isFinite(value)),
     )
   );
 }
 
-function parseSerialMatrix(line) {
-  const text = line.trim();
+function createMatrixFromPayload(payload) {
+  const values = [];
 
-  if (!text) {
-    return null;
-  }
+  for (let r = 0; r < ROW_COUNT; r++) {
+    const row = [];
 
-  try {
-    const data = JSON.parse(text);
-
-    if (!isMatrixPayload(data)) {
-      console.warn(`Invalid touch matrix skipped: ${text}`);
-      return null;
+    for (let c = 0; c < COL_COUNT; c++) {
+      row.push(payload[r * COL_COUNT + c]);
     }
 
-    return data;
-  } catch (error) {
-    console.warn(`Invalid serial JSON skipped: ${text}`);
-    return null;
+    values.push(row);
   }
+
+  return {
+    rows: ROW_COUNT,
+    cols: COL_COUNT,
+    values,
+  };
+}
+
+function formatMatrix(matrix, frameNumber) {
+  const lines = [
+    `Touch matrix ${ROW_COUNT}x${COL_COUNT} frame ${frameNumber} (${BAUD_RATE} baud, 8-bit)`,
+    `      ${Array.from({ length: COL_COUNT }, (_, c) => `D${c + 2}`.padStart(4)).join('')}`,
+  ];
+
+  matrix.values.forEach((row, r) => {
+    const label = `A${r}`.padStart(4);
+    const cells = row.map((value) => String(value).padStart(4)).join('');
+    lines.push(`${label}: ${cells}`);
+  });
+
+  return lines.join('\n');
+}
+
+function printMatrix(matrix, frameNumber) {
+  process.stdout.write('\x1Bc');
+  console.log(formatMatrix(matrix, frameNumber));
 }
 
 function readSerialTouchMatrix(serialPort, wsClient) {
-  const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }));
+  let buffer = Buffer.alloc(0);
+  let frameNumber = 0;
 
-  parser.on('data', (line) => {
-    const matrix = parseSerialMatrix(line);
+  serialPort.on('data', (chunk) => {
+    buffer = Buffer.concat([buffer, chunk]);
 
-    if (matrix === null) {
-      return;
+    while (buffer.length >= FRAME_HEADER.length) {
+      const headerIndex = buffer.indexOf(Buffer.from(FRAME_HEADER));
+
+      if (headerIndex === -1) {
+        buffer = buffer.subarray(buffer.length - 1);
+        return;
+      }
+
+      if (headerIndex > 0) {
+        buffer = buffer.subarray(headerIndex);
+      }
+
+      if (buffer.length < FRAME_SIZE) {
+        return;
+      }
+
+      const payload = buffer.subarray(FRAME_HEADER.length, FRAME_SIZE);
+      buffer = buffer.subarray(FRAME_SIZE);
+
+      const matrix = createMatrixFromPayload(payload);
+
+      if (!isMatrixPayload(matrix)) {
+        console.warn('Invalid binary touch matrix skipped');
+        continue;
+      }
+
+      frameNumber++;
+      printMatrix(matrix, frameNumber);
+      wsClient.sendTouchMatrix(matrix.values);
     }
-
-    wsClient.sendTouchMatrix(matrix);
   });
 }
 

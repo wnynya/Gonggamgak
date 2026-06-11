@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_2" data-name="레이어 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1304.44 1304.44">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #231815;
+        stroke-miterlimit: 10;
+        stroke-width: .5px;
+      }
+    </style>
+  </defs>
+  <g id="_레이어_1-2" data-name="레이어 1">
+    <g>
+      <g>
+        <circle class="cls-1" cx="211.22" cy="211.25" r="4.96"/>
+        <circle class="cls-1" cx="211.22" cy="1093.19" r="4.96"/>
+        <circle class="cls-1" cx="1093.15" cy="1093.19" r="4.96"/>
+        <circle class="cls-1" cx="1093.15" cy="211.25" r="4.96"/>
+        <circle class="cls-1" cx="76.21" cy="413.75" r="4.96"/>
+        <circle class="cls-1" cx="413.71" cy="1228.55" r="4.96"/>
+        <circle class="cls-1" cx="1228.52" cy="891.05" r="4.96"/>
+        <circle class="cls-1" cx="891.01" cy="76.25" r="4.96"/>
+        <circle class="cls-1" cx="413.53" cy="76.07" r="4.96"/>
+        <circle class="cls-1" cx="76.03" cy="890.87" r="4.96"/>
+        <circle class="cls-1" cx="890.83" cy="1228.37" r="4.96"/>
+        <circle class="cls-1" cx="1228.34" cy="413.57" r="4.96"/>
+        <circle class="cls-1" cx="652.22" cy="652.22" r="651.97"/>
+      </g>
+      <g>
+        <g>
+          <rect class="cls-1" x="719.54" y="672.77" width="39.69" height="7.09" transform="translate(63.0709 1415.6969) rotate(-90)"/>
+          <rect class="cls-1" x="719.54" y="624.58" width="39.69" height="7.09" transform="translate(111.2598 1367.5079) rotate(-90)"/>
+        </g>
+        <g>
+          <rect class="cls-1" x="545.21" y="672.77" width="39.69" height="7.09" transform="translate(-111.2598 1241.3661) rotate(-90)"/>
+          <rect class="cls-1" x="545.21" y="624.58" width="39.69" height="7.09" transform="translate(-63.0709 1193.1772) rotate(-90)"/>
+        </g>
+      </g>
+    </g>
+    <path class="cls-1" d="M694.74,723.08h-85.05c-23.48,0-42.52,19.04-42.52,42.52s19.04,42.52,42.52,42.52h85.05c23.48,0,42.52-19.04,42.52-42.52s-19.04-42.52-42.52-42.52Z"/>
+  </g>
+</svg>
