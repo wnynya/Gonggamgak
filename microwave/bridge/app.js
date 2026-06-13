@@ -1,9 +1,6 @@
 import Serial from './serial.js';
 import WebSocketClient from './websocket-client.js';
 
-const BAUD_RATE = 9600;
-const DEFAULT_WS_URL = 'wss://g161.ccc.vg/microwave';
-
 const args = (() => {
   let res = {};
   let key = null;
@@ -24,7 +21,6 @@ const args = (() => {
   return res;
 })();
 
-let wsc = null;
 let id = null;
 
 function getUsage() {
@@ -85,58 +81,6 @@ function messageToSerialText(message) {
   return null;
 }
 
-function createWebSocketClient(url, serial) {
-  const state = {
-    warnedNotReady: false,
-  };
-  const client = new WebSocketClient(url);
-  wsc = client;
-
-  client.on('open', () => {
-    state.warnedNotReady = false;
-    console.log(`WebSocket connected: ${url}`);
-  });
-
-  client.on('message', ({ data: text }) => {
-    try {
-      const message = JSON.parse(text);
-      const serialText = messageToSerialText(message);
-
-      if (serialText) {
-        serial.send(serialText);
-        console.log(`WS -> Serial: ${serialText}`);
-      }
-    } catch (error) {
-      console.warn(`Invalid websocket JSON skipped: ${text}`);
-    }
-  });
-
-  client.on('close', () => {
-    console.log('WebSocket closed. Reconnecting...');
-  });
-
-  client.on('error', (error) => {
-    console.error('WebSocket error:', error.message);
-  });
-
-  client.open();
-
-  return {
-    sendMicrowave(data) {
-      if (!client.connected) {
-        if (!state.warnedNotReady) {
-          console.warn('WebSocket not ready. Console output only for now.');
-          state.warnedNotReady = true;
-        }
-        return;
-      }
-
-      client.send({ event: 'microwave', data });
-      console.log(`Serial -> WS: ${data}`);
-    },
-  };
-}
-
 async function main() {
   if (args.l) {
     await listSerialPorts();
@@ -144,33 +88,34 @@ async function main() {
   }
 
   id = args.i;
-  if (!id) {
-    throw new Error(getUsage());
-  }
+  const wsc = new WebSocketClient('wss://g161.ccc.vg/microwave');
+  const serial = new Serial(args.s, { baudRate: 9600 });
 
-  const serialPath = args.s;
-  const wsUrl = args.w || DEFAULT_WS_URL;
-
-  if (!serialPath) {
-    throw new Error(getUsage());
-  }
-
-  const serial = new Serial(serialPath, { baudRate: BAUD_RATE });
-  const wsClient = createWebSocketClient(wsUrl, serial);
+  wsc.on('open', () => {
+    console.log(`ws open`);
+  });
+  wsc.on('json', (event, data) => {
+    console.log(event, data);
+  });
+  wsc.on('close', () => {
+    console.log('ws close');
+  });
+  wsc.on('error', (error) => {
+    console.error('wsc error:', error.message);
+  });
 
   serial.on('open', () => {
-    console.log(`Serial connected: ${serialPath} (${BAUD_RATE})`);
+    console.log(`serial open: ${serialPath}`);
   });
-
   serial.on('message', (data) => {
-    wsClient.sendMicrowave(data);
+    console.log(data);
   });
-
   serial.on('error', (error) => {
-    console.error('Serial error:', error.message);
+    console.error('serial error:', error.message);
   });
 
   await serial.open();
+  wsc.open();
 }
 
 main().catch((error) => {
