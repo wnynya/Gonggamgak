@@ -24,6 +24,16 @@ const btn_m1h1off = document.querySelector('#button-m1-h1-off');
 const btn_m1h2on = document.querySelector('#button-m1-h2-on');
 const btn_m1h2off = document.querySelector('#button-m1-h2-off');
 
+function mhumid(to, index, on) {
+  wsc.event('microwave-humid', { to, index, on });
+}
+function mtext(to, text) {
+  wsc.event('microwave-text', { to, text });
+}
+function mlight(to, text) {
+  wsc.event('microwave-light', { to, on });
+}
+
 btn_m1h1on.addEventListener('click', () => {
   wsc.event('microwave-humid', {
     to: 1,
