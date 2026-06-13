@@ -96,7 +96,30 @@ async function main() {
     console.log(`ws open`);
   });
   wsc.on('json', (event, data) => {
+    if (data.to !== id) {
+      return;
+    }
+
     console.log(event, data);
+    switch (event) {
+      case 'microwave-text': {
+        serial.send(`d[${data}]`);
+        break;
+      }
+      case 'microwave-light': {
+        serial.send(`l[${data.on ? 'on' : 'off'}]`);
+        break;
+      }
+      case 'microwave-humid': {
+        if (data.index == 1) {
+          serial.send(`h1[${data.on ? 'on' : 'off'}]`);
+        }
+        if (data.index == 2) {
+          serial.send(`h2[${data.on ? 'on' : 'off'}]`);
+        }
+        break;
+      }
+    }
   });
   wsc.on('close', () => {
     console.log('ws close');
@@ -109,7 +132,16 @@ async function main() {
     console.log(`serial open: ${serial.path}`);
   });
   serial.on('message', (data) => {
-    console.log(data);
+    console.log(`serial message: ${data}`);
+    const m = data.match(/(a-z0-9)+\[(.*)\]/);
+    const event = m[1];
+    const data = m[2];
+    console.log(event, data);
+    if (event == 'c') {
+      wsc.event('microwave-door', {
+        open: data == 'open',
+      });
+    }
   });
   serial.on('error', (error) => {
     console.error('serial error:', error.message);
