@@ -131,9 +131,9 @@ async function main() {
   serial.on('open', () => {
     console.log(`serial open: ${serial.path}`);
   });
-  serial.on('message', (data) => {
-    console.log(`serial message: ${data}`);
-    const m = data.match(/(a-z0-9)+\[(.*)\]/);
+  serial.on('message', (msg) => {
+    console.log(`serial message: ${msg}`);
+    const m = msg.match(/(a-z0-9)+\[(.*)\]/);
     const event = m[1];
     const data = m[2];
     console.log(event, data);
