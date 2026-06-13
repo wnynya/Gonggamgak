@@ -137,12 +137,11 @@ async function main() {
     if (!m) {
       return;
     }
-    console.log(m);
     const event = m[1];
     const data = m[2];
-    console.log(event, data);
     if (event == 'c') {
       wsc.event('microwave-door', {
+        ftom: id,
         open: data == 'open',
       });
     }
