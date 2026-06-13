@@ -1,12 +1,13 @@
-import WebRTCReceiver from '../../../webrtc-receiver.js';
-
 const startButton = document.querySelector('#start');
+const deviceSelect = document.querySelector('#audioInput');
 const inputGain = document.querySelector('#inputGain');
 const inputGainValue = document.querySelector('#inputGainValue');
 const statusElement = document.querySelector('#status');
 const textBackground = document.querySelector('#text .background');
 const textForeground = document.querySelector('#text .foreground');
 const cover = document.querySelector('.cover');
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const screens = {
   wav: document.querySelector('#wav canvas'),
@@ -29,7 +30,6 @@ const colorStops = [
   [255, 255, 255],
 ];
 
-let receiver = null;
 let audioContext = null;
 let analyser = null;
 let gainNode = null;
@@ -41,6 +41,8 @@ let delayedData = new Float32Array(fftSize);
 let delayBuffer = new Float32Array(24000);
 let delayIndex = 0;
 let spectrogramImage = null;
+let recognition = null;
+let transcriptText = '';
 
 function setStatus(text, state = 'idle') {
   statusElement.textContent = text;
@@ -128,6 +130,76 @@ function setInputGain(value = inputGain.value) {
   if (gainNode && audioContext) {
     gainNode.gain.setTargetAtTime(gain, audioContext.currentTime, 0.01);
   }
+}
+
+function trimTranscript(text) {
+  return Array.from(text).slice(-1000).join('');
+}
+
+function showLatestSpeechChar(text) {
+  const chars = Array.from(text.trim());
+  textForeground.textContent = chars.at(-1) || '';
+}
+
+function appendSpeechText(text) {
+  if (!text) {
+    return;
+  }
+
+  transcriptText = trimTranscript(`${transcriptText}${text}`);
+  textBackground.textContent = transcriptText;
+  textBackground.scrollTop = textBackground.scrollHeight;
+}
+
+function stopRecognition() {
+  if (!recognition) {
+    return;
+  }
+
+  recognition.onend = null;
+  recognition.stop();
+  recognition = null;
+}
+
+function startRecognition() {
+  if (!SpeechRecognition) {
+    return;
+  }
+
+  stopRecognition();
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = navigator.language || 'ko-KR';
+
+  recognition.onresult = (event) => {
+    for (
+      let index = event.resultIndex;
+      index < event.results.length;
+      index += 1
+    ) {
+      const result = event.results[index];
+      const text = result[0].transcript;
+
+      showLatestSpeechChar(text);
+
+      if (result.isFinal) {
+        appendSpeechText(text);
+      }
+    }
+  };
+
+  recognition.onerror = (event) => {
+    setStatus(event.error || 'speech error', 'error');
+  };
+
+  recognition.onend = () => {
+    if (mediaStream) {
+      recognition.start();
+    }
+  };
+
+  recognition.start();
 }
 
 function drawWaveform() {
@@ -311,14 +383,17 @@ function render() {
 }
 
 function stopStream() {
+  stopRecognition();
+
   if (animationFrame) {
     cancelAnimationFrame(animationFrame);
     animationFrame = null;
   }
 
-  receiver?.stop();
-  receiver = null;
-  mediaStream = null;
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null;
+  }
 
   if (audioContext) {
     audioContext.close();
@@ -329,12 +404,51 @@ function stopStream() {
   gainNode = null;
 }
 
-async function startAudioFromStream(stream) {
-  if (audioContext) {
-    return;
+async function listAudioInputs(selectedDeviceId = deviceSelect.value) {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const inputs = devices.filter((device) => device.kind === 'audioinput');
+  const fragment = document.createDocumentFragment();
+  const defaultOption = document.createElement('option');
+
+  defaultOption.value = '';
+  defaultOption.textContent = 'default';
+  fragment.append(defaultOption);
+
+  for (const device of inputs) {
+    if (device.deviceId === 'default') {
+      continue;
+    }
+
+    const option = document.createElement('option');
+    option.value = device.deviceId;
+    option.textContent =
+      device.label || `microphone ${fragment.childElementCount}`;
+    fragment.append(option);
   }
 
-  mediaStream = stream;
+  deviceSelect.replaceChildren(fragment);
+  deviceSelect.value = [...deviceSelect.options].some(
+    (option) => option.value === selectedDeviceId,
+  )
+    ? selectedDeviceId
+    : '';
+}
+
+async function startAudio(deviceId = '') {
+  stopStream();
+  setStatus('requesting mic...', 'pending');
+
+  const audio = {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+  };
+
+  if (deviceId) {
+    audio.deviceId = { exact: deviceId };
+  }
+
+  mediaStream = await navigator.mediaDevices.getUserMedia({ audio });
   audioContext = new AudioContext();
 
   if (audioContext.state === 'suspended') {
@@ -358,56 +472,55 @@ async function startAudioFromStream(stream) {
   delayIndex = 0;
   delayedData = new Float32Array(fftSize);
 
-  textBackground.textContent = 'WebRTC /webrtc/hearing';
-  textForeground.textContent = '●';
+  await listAudioInputs(deviceId);
+  startRecognition();
   setStatus('running', 'open');
   render();
+}
+
+async function restartAudio() {
+  if (!audioContext && !mediaStream) {
+    return;
+  }
+
+  try {
+    await startAudio(deviceSelect.value);
+  } catch (error) {
+    setStatus(error.message || 'mic error', 'error');
+  }
 }
 
 async function start() {
   try {
     startButton.disabled = true;
-    stopStream();
-    setStatus('waiting for WebRTC audio...', 'pending');
-
-    receiver = new WebRTCReceiver('/webrtc/hearing', {
-      role: 'hearing-raw-display',
-      sourceRole: 'hearing-input',
-      autoConnect: false,
-    });
-
-    receiver.on('status', (status) => {
-      if (!analyser) {
-        setStatus(status, 'pending');
-      }
-    });
-
-    receiver.on('stream', async (stream) => {
-      if (!stream.getAudioTracks().length) {
-        return;
-      }
-
-      await startAudioFromStream(stream);
-      cover.hidden = true;
-    });
-
-    receiver.connect();
+    await startAudio(deviceSelect.value);
+    cover.hidden = true;
   } catch (error) {
     startButton.disabled = false;
     cover.hidden = false;
-    setStatus(error.message || 'WebRTC audio error', 'error');
+    setStatus(error.message || 'mic error', 'error');
   }
 }
 
 startButton.addEventListener('click', start);
 cover.addEventListener('click', start);
+deviceSelect.addEventListener('change', restartAudio);
 inputGain.addEventListener('input', () => setInputGain());
 window.addEventListener('resize', resizeCanvases);
-window.addEventListener('pagehide', stopStream);
 
 for (const canvas of Object.values(screens)) {
   resizeCanvas(canvas);
 }
 
 setInputGain();
-render();
+
+if (!navigator.mediaDevices?.getUserMedia) {
+  startButton.disabled = true;
+  deviceSelect.disabled = true;
+  setStatus('no mic api', 'error');
+} else {
+  listAudioInputs().catch(() => {
+    setStatus('press start to allow mic', 'pending');
+  });
+  render();
+}

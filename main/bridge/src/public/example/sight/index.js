@@ -15,6 +15,7 @@ startButton.addEventListener('click', () => {
   source = new WebRTCReceiver('/webrtc/sight', {
     role: 'sight-raw-display',
     sourceRole: 'sight-input',
+    autoConnect: false,
   });
   source.on('status', (status) => {
     setStatus(status);
@@ -26,6 +27,7 @@ startButton.addEventListener('click', () => {
   });
 
   video.srcObject = source.mediaStream;
+  source.connect();
 });
 
 window.addEventListener('pagehide', () => {

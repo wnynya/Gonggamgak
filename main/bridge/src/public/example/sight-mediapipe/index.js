@@ -68,7 +68,25 @@ function send(event, data = {}, target = senderPeerId) {
     return;
   }
 
-  ws.send(JSON.stringify({ event, data: { ...data, target }, message: event }));
+  ws.send(
+    JSON.stringify({
+      event,
+      data: { ...toSignalData(data), target },
+      message: event,
+    }),
+  );
+}
+
+function toSignalData(data = {}) {
+  if (data && typeof data.toJSON === 'function') {
+    return data.toJSON();
+  }
+
+  if (data && typeof data === 'object') {
+    return data;
+  }
+
+  return {};
 }
 
 function stripSignalData(data = {}) {

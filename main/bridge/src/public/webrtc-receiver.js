@@ -86,9 +86,21 @@ class WebRTCReceiver extends EventEmitter {
 
     this.wsc.send({
       event,
-      data: { ...data, target },
+      data: { ...this.toSignalData(data), target },
       message: event,
     });
+  }
+
+  toSignalData(data = {}) {
+    if (data && typeof data.toJSON === 'function') {
+      return data.toJSON();
+    }
+
+    if (data && typeof data === 'object') {
+      return data;
+    }
+
+    return {};
   }
 
   sendReady(target = '') {
