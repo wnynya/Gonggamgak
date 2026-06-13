@@ -101,3 +101,131 @@ window.addEventListener('keyup', (event) => {
     sendSerial(`pe[${note}]`);
   }
 });
+
+function send(i, d) {
+  let val = '';
+  for (let i = 0; i < d.length; i++) {
+    val += parseInt(d[i], 2).toString(16).padStart(2, '0').toUpperCase();
+  }
+  wsc.event('microwave-serial', {
+    to: i,
+    text: `r[${val}]`,
+  });
+}
+
+function updateSseg() {
+  let val = '';
+  for (let i = 0; i < 7; i++) {
+    const el = document.querySelector(`#sseg-${i}`);
+    val += el.classList.contains('active') ? '1' : '0';
+  }
+  val += '0';
+  val = val.split('').reverse().join('');
+  document.querySelector('#sseg-value').innerHTML = val;
+}
+
+function initSseg() {
+  for (let i = 0; i < 7; i++) {
+    const el = document.querySelector(`#sseg-${i}`);
+    el.addEventListener('click', (event) => {
+      if (el.classList.contains('active')) {
+        el.classList.remove('active');
+      } else {
+        el.classList.add('active');
+      }
+      updateSseg();
+    });
+  }
+}
+
+initSseg();
+
+async function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+}
+
+const Message = {
+  GONGGAMGAK: [
+    '00111101',
+    '01011100',
+    '01010100',
+    '00111101',
+    '00000000',
+    '00111101',
+    '01011111',
+    '01010100',
+    '01000100',
+    '00000000',
+    '00111101',
+    '01011111',
+    '00111101',
+  ],
+  LGBABO: [
+    '00111000',
+    '00111101',
+    '00000000',
+    '01111100',
+    '01110111',
+    '01111100',
+    '01011100',
+  ],
+  YUNP: ['01101110', '00011100', '01010100', '00000000', '01110011'],
+};
+
+async function sendMsg(msg) {
+  const frames = [];
+
+  for (let i = -4; i < msg.length + 1; i++) {
+    const frame = [];
+    for (let j = 0; j < 4; j++) {
+      frame.push(msg[j + i] || '00000000');
+    }
+    frames.push(frame);
+  }
+
+  for (let i = 0; i < frames.length; i++) {
+    send(1, frames[i]);
+    await delay(500);
+  }
+}
+window.sendMsg = sendMsg;
+window.Message = Message;
+
+const Screen = {
+  FIREWORK: [
+    ['00000000', '01000000', '01000000', '00000000'],
+    ['00000000', '01000110', '01110000', '00000000'],
+    ['00000000', '01000000', '01000000', '00000000'],
+    ['01000000', '00000000', '00000000', '01000000'],
+    ['00000000', '00000000', '00000000', '00000000'],
+  ],
+  ROTATE: [
+    ['00000000', '00000000', '00000001', '00000001'],
+    ['00000000', '00000001', '00000001', '00000000'],
+    ['00000001', '00000001', '00000000', '00000000'],
+    ['00100001', '00000000', '00000000', '00000000'],
+    ['00110000', '00000000', '00000000', '00000000'],
+    ['00011000', '00000000', '00000000', '00000000'],
+    ['00001000', '00001000', '00000000', '00000000'],
+    ['00000000', '00001000', '00001000', '00000000'],
+    ['00000000', '00000000', '00001000', '00001000'],
+    ['00000000', '00000000', '00000000', '00001100'],
+    ['00000000', '00000000', '00000000', '00000110'],
+    ['00000000', '00000000', '00000000', '00000011'],
+  ],
+};
+async function sendSc(screen) {
+  for (let i = 0; i < screen.length; i++) {
+    send(1, screen[i]);
+    send(2, screen[i]);
+    await delay(50);
+  }
+  sendSc(Screen.ROTATE);
+}
+
+window.sendSc = sendSc;
+window.Screen = Screen;

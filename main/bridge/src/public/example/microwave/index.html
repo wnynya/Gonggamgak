@@ -1,7 +1,42 @@
 <!doctype html>
 <html>
-  <head> </head>
+  <head>
+    <link rel="stylesheet" href="style.css" />
+  </head>
   <body>
+    <fieldset>
+      <legend>7-segment-editor</legend>
+      <div class="sseg">
+        <div class="line l">
+          <div class="cell d"></div>
+          <div class="cell" id="sseg-0"></div>
+          <div class="cell d"></div>
+        </div>
+        <div class="line h">
+          <div class="cell" id="sseg-5"></div>
+          <div class="cell c"></div>
+          <div class="cell" id="sseg-1"></div>
+        </div>
+        <div class="line l">
+          <div class="cell d"></div>
+          <div class="cell" id="sseg-6"></div>
+          <div class="cell d"></div>
+        </div>
+        <div class="line h">
+          <div class="cell" id="sseg-4"></div>
+          <div class="cell c"></div>
+          <div class="cell" id="sseg-2"></div>
+        </div>
+        <div class="line l">
+          <div class="cell d"></div>
+          <div class="cell" id="sseg-3"></div>
+          <div class="cell d"></div>
+        </div>
+      </div>
+      <div class="value">
+        <code id="sseg-value">00000000</code>
+      </div>
+    </fieldset>
     <fieldset>
       <legend>웹소켓 연결</legend>
       <p>연결 주소: <code>wss://g161.ccc.vg/main</code></p>

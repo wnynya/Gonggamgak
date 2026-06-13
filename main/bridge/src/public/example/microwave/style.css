@@ -1,0 +1,29 @@
+.sseg {
+  width: 5rem;
+  padding: 0.5rem;
+  background: black;
+}
+.sseg > .line {
+  display: flex;
+}
+.sseg > .line.l .cell {
+  height: 1rem;
+  width: 3rem;
+  background: rgb(40, 40, 40);
+}
+.sseg > .line.l .cell.d {
+  width: 1rem;
+  background: black;
+}
+.sseg > .line.h .cell {
+  height: 3rem;
+  width: 1rem;
+  background: rgb(40, 40, 40);
+}
+.sseg > .line.h .cell.c {
+  width: 3rem;
+  background: black;
+}
+.sseg > .line .cell.active {
+  background: yellow;
+}
