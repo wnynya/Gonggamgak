@@ -45,7 +45,11 @@ main.on('json', (con, event, data, message) => {
       smell.broadcast(JSON.stringify({ event, data, message }));
       break;
     }
-    case 'microwave': {
+    case 'microwave-serial': {
+      microwave.broadcast(JSON.stringify({ event, data, message }));
+      break;
+    }
+    case 'microwave-text': {
       microwave.broadcast(JSON.stringify({ event, data, message }));
       break;
     }
@@ -71,9 +75,13 @@ function relayWebrtc(server, label) {
     con.event('webrtc-peer-id', { id: con.id });
   });
 
-  server.on('json', (con, event, data, message, object = {}) => {
-    const payload = JSON.stringify({ event, data, message, from: con.id });
-    const target = object.target || data?.target;
+  server.on('json', (con, event, data = {}, message) => {
+    const target = data?.target;
+    const payload = JSON.stringify({
+      event,
+      message,
+      data: { ...data, from: con.id },
+    });
 
     for (const connection of server.connections) {
       if (connection === con) {

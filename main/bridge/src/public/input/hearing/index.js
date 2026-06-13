@@ -42,11 +42,16 @@ function send(event, data = {}, target = '') {
     return;
   }
 
-  ws.send(JSON.stringify({ event, data, message: event, target }));
+  ws.send(JSON.stringify({ event, data: { ...data, target }, message: event }));
 }
 
 function receiverIdFrom(message) {
-  return message.from || message.data?.id || message.data?.from || '';
+  return message.data?.from || message.data?.id || '';
+}
+
+function stripSignalData(data = {}) {
+  const { from, target, role, sourceRole, id, ...payload } = data;
+  return payload;
 }
 
 async function listAudioInputs() {
@@ -106,12 +111,12 @@ async function addIceCandidate(peerId, candidate) {
     return;
   }
 
-  await peer.pc.addIceCandidate(candidate);
+  await peer.pc.addIceCandidate(stripSignalData(candidate));
 }
 
 async function flushPendingCandidates(peer) {
   for (const candidate of peer.pendingCandidates) {
-    await peer.pc.addIceCandidate(candidate);
+    await peer.pc.addIceCandidate(stripSignalData(candidate));
   }
 
   peer.pendingCandidates = [];
@@ -187,7 +192,7 @@ function connectSignal() {
       if (!peer) {
         return;
       }
-      await peer.pc.setRemoteDescription(message.data);
+      await peer.pc.setRemoteDescription(stripSignalData(message.data));
       await flushPendingCandidates(peer);
       setSignalState('answer 수신');
     } else if (message.event === 'webrtc-ice') {

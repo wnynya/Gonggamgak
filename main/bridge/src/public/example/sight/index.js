@@ -16,10 +16,10 @@ startButton.addEventListener('click', () => {
     role: 'sight-raw-display',
     sourceRole: 'sight-input',
   });
-  source.addEventListener('status', (event) => {
-    setStatus(event.detail);
+  source.on('status', (status) => {
+    setStatus(status);
   });
-  source.addEventListener('stream', () => {
+  source.on('stream', () => {
     video.muted = false;
     video.volume = 1;
     video.play().catch(() => {});

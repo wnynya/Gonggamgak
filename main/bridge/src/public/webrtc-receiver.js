@@ -1,4 +1,7 @@
-class WebRTCReceiver extends EventTarget {
+import EventEmitter from './eventemitter.js';
+import WebSocketClient from './websocket-client.js';
+
+class WebRTCReceiver extends EventEmitter {
   constructor(signalUrl, options = {}) {
     super();
 
@@ -10,7 +13,7 @@ class WebRTCReceiver extends EventTarget {
     this.sourceRole = options.sourceRole || '';
     this.mediaStream = new MediaStream();
 
-    this.ws = null;
+    this.wsc = null;
     this.pc = null;
     this.localPeerId = '';
     this.senderPeerId = '';
@@ -22,41 +25,48 @@ class WebRTCReceiver extends EventTarget {
   }
 
   connect() {
-    if (this.ws && this.ws.readyState <= WebSocket.OPEN) {
+    if (this.wsc && !this.wsc.closed) {
       return;
     }
 
-    this.ws = new WebSocket(this.signalUrl);
+    this.wsc = new WebSocketClient(this.signalUrl, {
+      autoReconnect: true,
+    });
 
-    this.ws.addEventListener('open', () => {
+    this.wsc.on('open', () => {
+      this.emit('open');
       this.setStatus('시그널 연결됨');
-      this.send('webrtc-join', { role: this.role }, '');
+      this.wsc.event('webrtc-join', { role: this.role });
       this.sendReady();
     });
 
-    this.ws.addEventListener('message', (event) => {
-      this.handleSignalMessage(event).catch((error) => {
+    this.wsc.on('json', (con, event, data, message) => {
+      this.handleSignalMessage({ event, data, message }).catch((error) => {
         console.error(error);
         this.setStatus('신호 처리 실패');
       });
     });
 
-    this.ws.addEventListener('close', () => {
+    this.wsc.on('close', (event) => {
+      this.emit('close', event);
       this.setStatus('시그널 끊김');
     });
 
-    this.ws.addEventListener('error', () => {
+    this.wsc.on('error', (error) => {
+      this.emit('error', error);
       this.setStatus('시그널 오류');
     });
+
+    this.wsc.open();
   }
 
   stop() {
     this.send('webrtc-bye', { id: this.localPeerId });
     this.pc?.close();
-    this.ws?.close();
+    this.wsc?.close();
 
     this.pc = null;
-    this.ws = null;
+    this.wsc = null;
     this.senderPeerId = '';
     this.pendingCandidates = [];
 
@@ -66,15 +76,19 @@ class WebRTCReceiver extends EventTarget {
   }
 
   setStatus(text) {
-    this.dispatchEvent(new CustomEvent('status', { detail: text }));
+    this.emit('status', text);
   }
 
   send(event, data = {}, target = this.senderPeerId) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (!this.wsc || !this.wsc.connected) {
       return;
     }
 
-    this.ws.send(JSON.stringify({ event, data, message: event, target }));
+    this.wsc.send({
+      event,
+      data: { ...data, target },
+      message: event,
+    });
   }
 
   sendReady(target = '') {
@@ -97,9 +111,7 @@ class WebRTCReceiver extends EventTarget {
     return message.data?.role === this.sourceRole;
   }
 
-  async handleSignalMessage(event) {
-    const message = JSON.parse(event.data);
-
+  async handleSignalMessage(message) {
     if (message.event === 'webrtc-peer-id') {
       this.localPeerId = message.data.id;
       this.sendReady();
@@ -107,16 +119,16 @@ class WebRTCReceiver extends EventTarget {
     }
 
     if (this.acceptsSource(message)) {
-      this.sendReady(message.from);
+      this.sendReady(message.data?.from);
     } else if (message.event === 'webrtc-offer') {
       await this.answerOffer(message);
     } else if (message.event === 'webrtc-ice') {
-      if (!this.senderPeerId || message.from === this.senderPeerId) {
-        await this.addIceCandidate(message.data);
+      if (!this.senderPeerId || message.data?.from === this.senderPeerId) {
+        await this.addIceCandidate(this.stripSignalData(message.data));
       }
     } else if (
       message.event === 'webrtc-bye' &&
-      message.from === this.senderPeerId
+      message.data?.from === this.senderPeerId
     ) {
       this.stop();
       this.setStatus('스트림 종료');
@@ -124,16 +136,21 @@ class WebRTCReceiver extends EventTarget {
   }
 
   async answerOffer(message) {
-    this.senderPeerId = message.from || '';
+    this.senderPeerId = message.data?.from || '';
     this.createPeerConnection();
 
-    await this.pc.setRemoteDescription(message.data);
+    await this.pc.setRemoteDescription(this.stripSignalData(message.data));
     await this.flushPendingCandidates();
 
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
     this.send('webrtc-answer', this.pc.localDescription);
     this.setStatus('answer 전송');
+  }
+
+  stripSignalData(data = {}) {
+    const { from, target, role, sourceRole, id, ...payload } = data;
+    return payload;
   }
 
   createPeerConnection() {
@@ -153,9 +170,7 @@ class WebRTCReceiver extends EventTarget {
       }
 
       this.setStatus('스트림 수신 중');
-      this.dispatchEvent(
-        new CustomEvent('stream', { detail: this.mediaStream }),
-      );
+      this.emit('stream', this.mediaStream);
     });
 
     this.pc.addEventListener('icecandidate', (event) => {

@@ -68,7 +68,12 @@ function send(event, data = {}, target = senderPeerId) {
     return;
   }
 
-  ws.send(JSON.stringify({ event, data, message: event, target }));
+  ws.send(JSON.stringify({ event, data: { ...data, target }, message: event }));
+}
+
+function stripSignalData(data = {}) {
+  const { from, target, role, sourceRole, id, ...payload } = data;
+  return payload;
 }
 
 function resizeCanvas() {
@@ -265,7 +270,7 @@ async function addIceCandidate(candidate) {
 
 async function flushPendingCandidates() {
   for (const candidate of pendingCandidates) {
-    await pc.addIceCandidate(candidate);
+    await pc.addIceCandidate(stripSignalData(candidate));
   }
 
   pendingCandidates = [];
@@ -295,21 +300,21 @@ function connectSignal() {
     }
 
     if (message.event === 'webrtc-join' && message.data?.role === 'sight-input') {
-      send('webrtc-receiver-ready', { id: localPeerId }, message.from);
+      send('webrtc-receiver-ready', { id: localPeerId }, message.data?.from);
     } else if (message.event === 'webrtc-offer') {
-      senderPeerId = message.from || '';
+      senderPeerId = message.data?.from || '';
       createPeerConnection();
-      await pc.setRemoteDescription(message.data);
+      await pc.setRemoteDescription(stripSignalData(message.data));
       await flushPendingCandidates();
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       send('webrtc-answer', pc.localDescription);
       setSignalState('answer 전송');
     } else if (message.event === 'webrtc-ice') {
-      if (!senderPeerId || message.from === senderPeerId) {
+      if (!senderPeerId || message.data?.from === senderPeerId) {
         await addIceCandidate(message.data);
       }
-    } else if (message.event === 'webrtc-bye' && message.from === senderPeerId) {
+    } else if (message.event === 'webrtc-bye' && message.data?.from === senderPeerId) {
       setMediaState('스트림 종료');
       pc?.close();
       pc = null;

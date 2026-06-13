@@ -376,18 +376,18 @@ async function start() {
       autoConnect: false,
     });
 
-    receiver.addEventListener('status', (event) => {
+    receiver.on('status', (status) => {
       if (!analyser) {
-        setStatus(event.detail, 'pending');
+        setStatus(status, 'pending');
       }
     });
 
-    receiver.addEventListener('stream', async (event) => {
-      if (!event.detail.getAudioTracks().length) {
+    receiver.on('stream', async (stream) => {
+      if (!stream.getAudioTracks().length) {
         return;
       }
 
-      await startAudioFromStream(event.detail);
+      await startAudioFromStream(stream);
       cover.hidden = true;
     });
 

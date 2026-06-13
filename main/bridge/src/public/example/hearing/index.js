@@ -17,10 +17,10 @@ startButton.addEventListener('click', () => {
     role: 'hearing-raw-display',
     sourceRole: 'hearing-input',
   });
-  source.addEventListener('status', (event) => {
-    setStatus(event.detail);
+  source.on('status', (status) => {
+    setStatus(status);
   });
-  source.addEventListener('stream', () => {
+  source.on('stream', () => {
     audio.play().catch(() => {});
   });
 

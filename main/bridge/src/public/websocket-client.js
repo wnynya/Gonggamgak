@@ -1,6 +1,6 @@
 'use strict';
 
-import EventEmitter from '/eventemitter.mjs';
+import EventEmitter from '/eventemitter.js';
 
 class WebSocketClient extends EventEmitter {
   constructor(uri, options = {}) {
@@ -50,13 +50,13 @@ class WebSocketClient extends EventEmitter {
 
     try {
       this.connection = new WebSocket(this.uri);
-      this.addEventListener();
+      this.#addEventListener();
     } catch (error) {
       throw error;
     }
   }
 
-  addEventListener() {
+  #addEventListener() {
     this.connection.onopen = (event) => {
       this.connected = true;
       this.clearReconnectInterval();
@@ -91,7 +91,7 @@ class WebSocketClient extends EventEmitter {
 
   close() {
     this.closed = true;
-    this.connection ? this.connection.close() : null;
+    this.connection?.close();
   }
 
   send(message) {

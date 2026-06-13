@@ -1,23 +1,31 @@
-import { SerialPort } from 'serialport';
-import WebSocket from 'ws';
+import Serial from './serial.js';
+import WebSocketClient from './websocket-client.js';
 
 const BAUD_RATE = 9600;
-const DEFAULT_WS_URL = 'ws://localhost:9990/microwave';
-const RECONNECT_DELAY_MS = 1000;
+const DEFAULT_WS_URL = 'wss://g161.ccc.vg/microwave';
 
-function getArg(name, fallback = null) {
-  const index = process.argv.indexOf(name);
-
-  if (index === -1 || !process.argv[index + 1]) {
-    return fallback;
+const args = (() => {
+  let res = {};
+  let key = null;
+  for (const arg of process.argv.slice(2)) {
+    if (arg.startsWith('-')) {
+      if (key) {
+        res[key] = true;
+      }
+      key = arg.replace(/^-+/, '');
+    } else if (key) {
+      res[key] = arg;
+      key = null;
+    }
   }
+  if (key) {
+    res[key] = true;
+  }
+  return res;
+})();
 
-  return process.argv[index + 1];
-}
-
-function hasArg(name) {
-  return process.argv.includes(name);
-}
+let wsc = null;
+let id = null;
 
 function getUsage() {
   return [
@@ -45,40 +53,11 @@ function formatPort(port) {
 }
 
 async function listSerialPorts() {
-  const ports = await SerialPort.list();
+  const ports = await Serial.list();
 
-  if (ports.length === 0) {
-    console.log('시리얼 장치를 찾지 못했습니다.');
-    return;
-  }
-
-  console.log('시리얼 장치 목록:');
+  console.log(`serials(${ports.length}): `);
   ports.forEach((port) => {
-    console.log(`- ${formatPort(port)}`);
-  });
-}
-
-async function openSerial(path) {
-  const port = new SerialPort({ path, baudRate: BAUD_RATE });
-
-  await new Promise((resolve, reject) => {
-    port.once('open', resolve);
-    port.once('error', reject);
-  });
-
-  console.log(`Serial connected: ${path} (${BAUD_RATE})`);
-  return port;
-}
-
-function serialWrite(serialPort, text) {
-  const command = text.endsWith('\n') ? text : `${text}\n`;
-  serialPort.write(command, (error) => {
-    if (error) {
-      console.error('Serial write error:', error.message);
-      return;
-    }
-
-    console.log(`WS -> Serial: ${text}`);
+    console.log(`  ${formatPort(port)}`);
   });
 }
 
@@ -106,59 +85,45 @@ function messageToSerialText(message) {
   return null;
 }
 
-function createWebSocketClient(url, serialPort) {
+function createWebSocketClient(url, serial) {
   const state = {
-    ws: null,
     warnedNotReady: false,
   };
+  const client = new WebSocketClient(url);
+  wsc = client;
 
-  function connect() {
-    const ws = new WebSocket(url);
-    state.ws = ws;
+  client.on('open', () => {
+    state.warnedNotReady = false;
+    console.log(`WebSocket connected: ${url}`);
+  });
 
-    ws.on('open', () => {
-      state.warnedNotReady = false;
-      console.log(`WebSocket connected: ${url}`);
-    });
+  client.on('message', ({ data: text }) => {
+    try {
+      const message = JSON.parse(text);
+      const serialText = messageToSerialText(message);
 
-    ws.on('message', (raw) => {
-      const text = raw.toString();
-
-      try {
-        const message = JSON.parse(text);
-        const serialText = messageToSerialText(message);
-
-        if (serialText) {
-          serialWrite(serialPort, serialText);
-        }
-      } catch (error) {
-        console.warn(`Invalid websocket JSON skipped: ${text}`);
+      if (serialText) {
+        serial.send(serialText);
+        console.log(`WS -> Serial: ${serialText}`);
       }
-    });
+    } catch (error) {
+      console.warn(`Invalid websocket JSON skipped: ${text}`);
+    }
+  });
 
-    ws.on('close', () => {
-      if (state.ws === ws) {
-        state.ws = null;
-      }
+  client.on('close', () => {
+    console.log('WebSocket closed. Reconnecting...');
+  });
 
-      console.log(
-        `WebSocket closed. Reconnecting in ${RECONNECT_DELAY_MS}ms...`,
-      );
-      setTimeout(connect, RECONNECT_DELAY_MS);
-    });
+  client.on('error', (error) => {
+    console.error('WebSocket error:', error.message);
+  });
 
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error.message);
-    });
-  }
-
-  connect();
+  client.open();
 
   return {
     sendMicrowave(data) {
-      const ws = state.ws;
-
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
+      if (!client.connected) {
         if (!state.warnedNotReady) {
           console.warn('WebSocket not ready. Console output only for now.');
           state.warnedNotReady = true;
@@ -166,52 +131,46 @@ function createWebSocketClient(url, serialPort) {
         return;
       }
 
-      const message = JSON.stringify({ event: 'microwave', data });
-      ws.send(message);
+      client.send({ event: 'microwave', data });
       console.log(`Serial -> WS: ${data}`);
     },
   };
 }
 
-function readSerialLines(serialPort, wsClient) {
-  let buffer = '';
-
-  serialPort.on('data', (chunk) => {
-    buffer += chunk.toString('utf8');
-
-    while (true) {
-      const newlineIndex = buffer.search(/\r?\n/);
-
-      if (newlineIndex === -1) {
-        return;
-      }
-
-      const line = buffer.slice(0, newlineIndex).trim();
-      buffer = buffer.slice(newlineIndex + (buffer[newlineIndex] === '\r' ? 2 : 1));
-
-      if (line) {
-        wsClient.sendMicrowave(line);
-      }
-    }
-  });
-}
-
 async function main() {
-  if (hasArg('-l')) {
+  if (args.l) {
     await listSerialPorts();
     return;
   }
 
-  const serialPath = getArg('-s');
-  const wsUrl = getArg('-w', DEFAULT_WS_URL);
+  id = args.i;
+  if (!id) {
+    throw new Error(getUsage());
+  }
+
+  const serialPath = args.s;
+  const wsUrl = args.w || DEFAULT_WS_URL;
 
   if (!serialPath) {
     throw new Error(getUsage());
   }
 
-  const serialPort = await openSerial(serialPath);
-  const wsClient = createWebSocketClient(wsUrl, serialPort);
-  readSerialLines(serialPort, wsClient);
+  const serial = new Serial(serialPath, { baudRate: BAUD_RATE });
+  const wsClient = createWebSocketClient(wsUrl, serial);
+
+  serial.on('open', () => {
+    console.log(`Serial connected: ${serialPath} (${BAUD_RATE})`);
+  });
+
+  serial.on('message', (data) => {
+    wsClient.sendMicrowave(data);
+  });
+
+  serial.on('error', (error) => {
+    console.error('Serial error:', error.message);
+  });
+
+  await serial.open();
 }
 
 main().catch((error) => {
