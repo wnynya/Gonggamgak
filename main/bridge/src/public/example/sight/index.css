@@ -1,0 +1,58 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+video {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  background: #111;
+  object-fit: cover;
+}
+
+button {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: clamp(26px, 5vw, 56px);
+  font-weight: 800;
+}
+
+button.is-hidden {
+  display: none;
+}
+
+#status {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  pointer-events: none;
+}

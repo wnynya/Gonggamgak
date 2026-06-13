@@ -12,7 +12,17 @@ function use(path, server) {
   servers[path] = server;
 }
 
-import { hearing, sight, touch, main, smell, out1, webrtc } from './wss.js';
+import {
+  hearing,
+  sight,
+  touch,
+  main,
+  smell,
+  out1,
+  webrtc,
+  webrtcSight,
+  webrtcHearing,
+} from './wss.js';
 use('/hearing', hearing);
 use('/sight', sight);
 use('/touch', touch);
@@ -20,6 +30,8 @@ use('/main', main);
 use('/smell', smell);
 use('/out1', out1);
 use('/webrtc', webrtc);
+use('/webrtc/sight', webrtcSight);
+use('/webrtc/hearing', webrtcHearing);
 
 import { press } from './wss.js';
 use('/press', press);

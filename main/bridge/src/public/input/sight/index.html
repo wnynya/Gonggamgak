@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=" />
+    <title>Sight Input</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <main>
+      <video id="preview" autoplay playsinline muted></video>
+
+      <section class="panel" aria-label="camera input controls">
+        <div class="topline">
+          <strong>시각 입력</strong>
+          <span id="signal-state">대기</span>
+        </div>
+
+        <div class="controls">
+          <select id="camera-select" aria-label="camera"></select>
+          <button id="start-button" type="button">시작</button>
+          <button id="stop-button" type="button" disabled>정지</button>
+        </div>
+
+        <div class="meta">
+          <span id="stream-state">카메라 대기</span>
+          <span id="peer-count">수신 0</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

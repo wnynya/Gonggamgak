@@ -9,6 +9,8 @@ const smell = new WebSocketServer();
 
 const out1 = new WebSocketServer();
 const webrtc = new WebSocketServer();
+const webrtcSight = new WebSocketServer();
+const webrtcHearing = new WebSocketServer();
 const press = new WebSocketServer();
 const microwave = new WebSocketServer();
 
@@ -63,19 +65,46 @@ out1.on('close', (con) => {
   console.log(`out1: client disconnected`);
 });
 
-webrtc.on('connection', (con) => {
-  console.log(`webrtc: client connected`);
-});
-webrtc.on('json', (con, event, data, message) => {
-  for (const connection of webrtc.connections) {
-    if (connection !== con) {
-      connection.send(JSON.stringify({ event, data, message }));
-    }
-  }
-});
-webrtc.on('close', () => {
-  console.log(`webrtc: client disconnected`);
-});
+function relayWebrtc(server, label) {
+  server.on('connection', (con) => {
+    console.log(`${label}: client connected`);
+    con.event('webrtc-peer-id', { id: con.id });
+  });
 
-export { hearing, sight, touch, main, smell, out1, webrtc, press };
+  server.on('json', (con, event, data, message, object = {}) => {
+    const payload = JSON.stringify({ event, data, message, from: con.id });
+    const target = object.target || data?.target;
+
+    for (const connection of server.connections) {
+      if (connection === con) {
+        continue;
+      }
+
+      if (!target || connection.id === target) {
+        connection.send(payload);
+      }
+    }
+  });
+
+  server.on('close', () => {
+    console.log(`${label}: client disconnected`);
+  });
+}
+
+relayWebrtc(webrtc, 'webrtc');
+relayWebrtc(webrtcSight, 'webrtc/sight');
+relayWebrtc(webrtcHearing, 'webrtc/hearing');
+
+export {
+  hearing,
+  sight,
+  touch,
+  main,
+  smell,
+  out1,
+  webrtc,
+  webrtcSight,
+  webrtcHearing,
+  press,
+};
 export { microwave };

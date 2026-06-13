@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: #080808;
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+main {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 16px;
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.topline,
+.controls,
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topline,
+.meta {
+  justify-content: space-between;
+}
+
+.topline span,
+.meta {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+}
+
+#meter {
+  display: block;
+  width: 100%;
+  height: 96px;
+  border-radius: 6px;
+  background: #101010;
+}
+
+select,
+button {
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+}
+
+select {
+  min-width: 0;
+  flex: 1;
+  padding: 0 10px;
+}
+
+button {
+  flex: 0 0 72px;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}

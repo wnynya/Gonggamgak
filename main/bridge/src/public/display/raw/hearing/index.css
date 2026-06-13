@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+}
+
+.controll p {
+  margin: 0;
+}
+
+#status {
+  min-width: 92px;
+  color: #aaa;
+  font-size: 13px;
+}
+
+#status[data-state='open'] {
+  color: #8ee884;
+}
+
+#status[data-state='error'] {
+  color: #ff7d7d;
+}
+
+#status[data-state='pending'] {
+  color: #ffd15c;
+}
+
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.display {
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.1rem;
+  padding: 0.1rem;
+}
+.display .screen {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.display .screen canvas {
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+
+#text {
+  color: white;
+  background: black;
+}
+
+#text .background {
+  overflow-y: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  scrollbar-width: none;
+}
+
+#text .background::-webkit-scrollbar {
+  display: none;
+}
+
+#text .foreground {
+  display: grid;
+  place-items: center;
+  font-size: min(8rem, 24vw, 36vh);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.cover {
+  width: 100%;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  position: fixed;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 10000000;
+}
+
+.cover[hidden] {
+  display: none;
+}

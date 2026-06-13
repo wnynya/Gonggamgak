@@ -76,7 +76,7 @@ class WebSocketServer extends EventEmitter {
       try {
         const object = JSON.parse(text);
         con.emit(object.event, object.data, object.message);
-        this.emit('json', con, object.event, object.data, object.message);
+        this.emit('json', con, object.event, object.data, object.message, object);
         this.emit('text', con, text);
       } catch (error) {
         this.emit('text', con, text);
