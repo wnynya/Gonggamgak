@@ -133,7 +133,7 @@ async function main() {
   });
   serial.on('message', (msg) => {
     console.log(`serial message: ${msg}`);
-    const m = msg.match(/(a-z0-9)+\[(.*)\]/);
+    const m = msg.match(/([a-z0-9]+)\[(.*)\]/);
     if (!m) {
       return;
     }
