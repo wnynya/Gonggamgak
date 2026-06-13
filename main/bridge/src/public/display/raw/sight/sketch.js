@@ -1,8 +1,10 @@
 let video;
+let videoSource;
 let faceMesh, hands;
 let faceLandmarks = [];
 let handLandmarks = [];
 let w, h;
+let videoStatus = 'WebRTC 연결 대기';
 
 function setup() {
   createCanvas(1280, 800); // 16:10 비율
@@ -10,8 +12,10 @@ function setup() {
   // 이미지 부드럽게 보간(깨짐 방지)
   smooth(); 
   
-  video = createCapture(VIDEO);
-  video.hide();
+  video = document.createElement('video');
+  video.playsInline = true;
+  video.muted = true;
+  video.autoplay = true;
   
   w = width / 2; 
   h = height / 2; 
@@ -32,13 +36,63 @@ function setup() {
   });
   hands.onResults(onHandResults);
 
-  const camera = new Camera(video.elt, {
-    onFrame: async () => {
-      await faceMesh.send({ image: video.elt });
-      await hands.send({ image: video.elt });
-    }
+  startWebRTCVideo();
+}
+
+async function startWebRTCVideo() {
+  const { default: WebRTCReceiver } = await import('/webrtc-receiver.js');
+
+  videoSource = new WebRTCReceiver('/webrtc/sight', {
+    role: 'sight-raw-display',
+    sourceRole: 'sight-input',
+    autoConnect: false,
   });
-  camera.start();
+
+  video.srcObject = videoSource.mediaStream;
+
+  videoSource.on('status', (status) => {
+    videoStatus = status;
+  });
+
+  videoSource.on('stream', () => {
+    videoStatus = '스트림 수신 중';
+    video.play().catch(() => {});
+  });
+
+  video.addEventListener('loadedmetadata', () => {
+    syncVideoSize();
+  });
+
+  videoSource.connect();
+  requestAnimationFrame(sendWebRTCFrame);
+}
+
+async function sendWebRTCFrame() {
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    syncVideoSize();
+
+    try {
+      await faceMesh.send({ image: video });
+      await hands.send({ image: video });
+    } catch (error) {
+      videoStatus = error.message || 'MediaPipe 오류';
+      console.error(error);
+    }
+  }
+
+  requestAnimationFrame(sendWebRTCFrame);
+}
+
+function syncVideoSize() {
+  return Boolean(video.videoWidth && video.videoHeight);
+}
+
+function getVideoWidth() {
+  return video.videoWidth || 0;
+}
+
+function getVideoHeight() {
+  return video.videoHeight || 0;
 }
 
 function onFaceResults(results) {
@@ -59,8 +113,18 @@ function onHandResults(results) {
 
 function draw() {
   background(0);
+
+  const videoWidth = getVideoWidth();
+  const videoHeight = getVideoHeight();
   
-  if (video.width === 0 || video.height === 0) return;
+  if (!videoWidth || !videoHeight) {
+    fill(255);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text(videoStatus, width / 2, height / 2);
+    return;
+  }
 
   push();
   translate(width, 0);
@@ -68,12 +132,12 @@ function draw() {
   
   // 웹캠 이미지 Center Crop 영역 계산
   let baseCropW, baseCropH, baseCropX, baseCropY;
-  if (video.width / video.height < w / h) {
-    baseCropW = video.width; baseCropH = video.width * (h / w);
-    baseCropX = 0; baseCropY = (video.height - baseCropH) / 2;
+  if (videoWidth / videoHeight < w / h) {
+    baseCropW = videoWidth; baseCropH = videoWidth * (h / w);
+    baseCropX = 0; baseCropY = (videoHeight - baseCropH) / 2;
   } else {
-    baseCropH = video.height; baseCropW = video.height * (w / h);
-    baseCropY = 0; baseCropX = (video.width - baseCropW) / 2;
+    baseCropH = videoHeight; baseCropW = videoHeight * (w / h);
+    baseCropY = 0; baseCropX = (videoWidth - baseCropW) / 2;
   }
   
   let useFace = false; let useHand = false;
@@ -90,14 +154,14 @@ function draw() {
       
       // 오른쪽 눈 
       cw2 = 60; ch2 = cw2 * (h / w); 
-      sx2 = (rightEye.x * video.width) - cw2 / 2; sy2 = (rightEye.y * video.height) - ch2 / 2;
+      sx2 = (rightEye.x * videoWidth) - cw2 / 2; sy2 = (rightEye.y * videoHeight) - ch2 / 2;
       
       const facialFeaturesIndices = [33, 133, 362, 263, 1, 2, 94, 61, 291, 0, 17];
-      let minX = video.width, maxX = 0, minY = video.height, maxY = 0;
+      let minX = videoWidth, maxX = 0, minY = videoHeight, maxY = 0;
       for (let index of facialFeaturesIndices) {
         let lm = landmarks[index];
         if (lm) {
-          let srcX = lm.x * video.width; let srcY = lm.y * video.height;
+          let srcX = lm.x * videoWidth; let srcY = lm.y * videoHeight;
           if (srcX < minX) minX = srcX; if (srcX > maxX) maxX = srcX;
           if (srcY < minY) minY = srcY; if (srcY > maxY) maxY = srcY;
         }
@@ -118,9 +182,9 @@ function draw() {
     let firstHand = handLandmarks[0];
     if (firstHand) {
       useHand = true;
-      let minXh = video.width, maxXh = 0, minYh = video.height, maxYh = 0;
+      let minXh = videoWidth, maxXh = 0, minYh = videoHeight, maxYh = 0;
       for (let lm of firstHand) {
-        let srcX = lm.x * video.width; let srcY = lm.y * video.height;
+        let srcX = lm.x * videoWidth; let srcY = lm.y * videoHeight;
         if (srcX < minXh) minXh = srcX; if (srcX > maxXh) maxXh = srcX;
         if (srcY < minYh) minYh = srcY; if (srcY > maxYh) maxYh = srcY;
       }
@@ -137,13 +201,22 @@ function draw() {
 
   // 여백 제어 분할 화면 함수
   function drawQuadrant(posX, posY, useCrop, sx, sy, cw, ch) {
-    if (!useCrop) {
-      image(video, posX, posY, w, h, baseCropX, baseCropY, baseCropW, baseCropH);
-    } else {
-      let clamped_sx = max(0, min(sx, video.width - cw));
-      let clamped_sy = max(0, min(sy, video.height - ch));
-      image(video, posX, posY, w, h, clamped_sx, clamped_sy, cw, ch);
-    }
+    const sourceX = useCrop ? max(0, min(sx, videoWidth - cw)) : baseCropX;
+    const sourceY = useCrop ? max(0, min(sy, videoHeight - ch)) : baseCropY;
+    const sourceW = useCrop ? cw : baseCropW;
+    const sourceH = useCrop ? ch : baseCropH;
+
+    drawingContext.drawImage(
+      video,
+      sourceX,
+      sourceY,
+      sourceW,
+      sourceH,
+      posX,
+      posY,
+      w,
+      h,
+    );
   }
   
   // 1. 베이스 원본 카메라 (실사 색감)
