@@ -5,6 +5,12 @@ let faceLandmarks = [];
 let handLandmarks = [];
 let w, h;
 let videoStatus = 'WebRTC 연결 대기';
+const DETECT_WIDTH = 640;
+const DETECT_INTERVAL_MS = 66;
+let detectCanvas;
+let detectContext;
+let lastDetectTime = 0;
+let detectBusy = false;
 
 function setup() {
   createCanvas(1280, 800); // 16:10 비율
@@ -16,6 +22,8 @@ function setup() {
   video.playsInline = true;
   video.muted = true;
   video.autoplay = true;
+  detectCanvas = document.createElement('canvas');
+  detectContext = detectCanvas.getContext('2d', { alpha: false });
   
   w = width / 2; 
   h = height / 2; 
@@ -68,19 +76,51 @@ async function startWebRTCVideo() {
 }
 
 async function sendWebRTCFrame() {
-  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+  const now = performance.now();
+
+  if (
+    video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+    !detectBusy &&
+    now - lastDetectTime >= DETECT_INTERVAL_MS
+  ) {
     syncVideoSize();
 
     try {
-      await faceMesh.send({ image: video });
-      await hands.send({ image: video });
+      detectBusy = true;
+      lastDetectTime = now;
+      const image = getDetectionImage();
+
+      await faceMesh.send({ image });
+      await hands.send({ image });
     } catch (error) {
       videoStatus = error.message || 'MediaPipe 오류';
       console.error(error);
+    } finally {
+      detectBusy = false;
     }
   }
 
   requestAnimationFrame(sendWebRTCFrame);
+}
+
+function getDetectionImage() {
+  const videoWidth = getVideoWidth();
+  const videoHeight = getVideoHeight();
+
+  if (!videoWidth || !videoHeight) {
+    return video;
+  }
+
+  const detectWidth = Math.min(DETECT_WIDTH, videoWidth);
+  const detectHeight = Math.max(1, Math.round(detectWidth * (videoHeight / videoWidth)));
+
+  if (detectCanvas.width !== detectWidth || detectCanvas.height !== detectHeight) {
+    detectCanvas.width = detectWidth;
+    detectCanvas.height = detectHeight;
+  }
+
+  detectContext.drawImage(video, 0, 0, detectWidth, detectHeight);
+  return detectCanvas;
 }
 
 function syncVideoSize() {
