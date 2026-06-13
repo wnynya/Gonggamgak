@@ -1,8 +1,12 @@
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: black;
   overflow: hidden;
-  height: 100%;
 }
 * {
   box-sizing: border-box;
