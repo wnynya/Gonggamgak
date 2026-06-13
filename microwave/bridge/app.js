@@ -96,11 +96,10 @@ async function main() {
     console.log(`ws open`);
   });
   wsc.on('json', (event, data) => {
+    console.log(event, data);
     if (data.to !== id) {
       return;
     }
-
-    console.log(event, data);
     switch (event) {
       case 'microwave-text': {
         serial.send(`d[${data.text}]`);

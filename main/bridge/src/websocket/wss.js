@@ -45,11 +45,9 @@ main.on('json', (con, event, data, message) => {
       smell.broadcast(JSON.stringify({ event, data, message }));
       break;
     }
-    case 'microwave-serial': {
-      microwave.broadcast(JSON.stringify({ event, data, message }));
-      break;
-    }
-    case 'microwave-text': {
+    case 'microwave-humid':
+    case 'microwave-text':
+    case 'microwave-light': {
       microwave.broadcast(JSON.stringify({ event, data, message }));
       break;
     }
