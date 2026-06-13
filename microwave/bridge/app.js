@@ -89,6 +89,7 @@ async function main() {
 
   id = args.i;
   const wsc = new WebSocketClient('wss://g161.ccc.vg/microwave');
+
   const serial = new Serial(args.s, { baudRate: 9600 });
 
   wsc.on('open', () => {
@@ -105,7 +106,7 @@ async function main() {
   });
 
   serial.on('open', () => {
-    console.log(`serial open: ${serialPath}`);
+    console.log(`serial open: ${serial.path}`);
   });
   serial.on('message', (data) => {
     console.log(data);
