@@ -96,10 +96,10 @@ async function main() {
     console.log(`ws open`);
   });
   wsc.on('json', (con, event, data) => {
-    console.log(event, data);
     if (data.to !== id) {
       return;
     }
+    console.log(event, data);
     switch (event) {
       case 'microwave-text': {
         serial.send(`d[${data.text}]`);
@@ -144,7 +144,7 @@ async function main() {
     const data = m[2];
     if (event == 'c') {
       wsc.event('microwave-door', {
-        ftom: id,
+        from: id,
         open: data == 'open',
       });
     }
