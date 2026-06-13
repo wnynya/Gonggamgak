@@ -19,7 +19,7 @@ const screens = {
 
 const fftSize = 2048;
 const timeViewSampleCount = 512;
-const maxFrequency = 10000;
+const maxFrequency = 3000;
 const frequencyBinCount = fftSize / 2;
 const colorStops = [
   [0, 0, 0],
