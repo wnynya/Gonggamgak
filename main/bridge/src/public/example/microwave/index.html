@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head> </head>
+  <body>
+    <fieldset>
+      <legend>웹소켓 연결</legend>
+      <p>연결 주소: <code>wss://g161.ccc.vg/main</code></p>
+    </fieldset>
+    <fieldset>
+      <legend>1번 전자레인지 ()</legend>
+
+      <fieldset>
+        <legend>웹소켓을 통해 들어오는 데이터</legend>
+
+        <fieldset>
+          <legend>문 열림 닫힘 감지</legend>
+          <span>문: <span id="m1-door"></span></span>
+          <br />
+          <pre>
+{ 
+  "event": "microwave-door", 
+  "data": { 
+    "from": 1 // 전자레인지 번호
+    "open": true // 열리면 true 닫히면 false 
+  } 
+}
+          </pre>
+        </fieldset>
+      </fieldset>
+
+      <fieldset>
+        <legend>웹소켓을 통해 나가는 데이터</legend>
+
+        <fieldset>
+          <legend>가습기 제어</legend>
+          <button id="button-m1-h1-on">가습기 1 켜기</button>
+          <button id="button-m1-h1-off">가습기 1 끄기</button>
+          <button id="button-m1-h2-on">가습기 2 켜기</button>
+          <button id="button-m1-h2-off">가습기 2 끄기</button>
+          <pre>
+{ 
+  "event": "microwave-humid", 
+  "data": { 
+    "to": 1 // 전자레인지 번호
+    "index": 1 // 가습기 번호 (1 또는 2)
+    "on": true // 켜려면 true 끄려면 false 
+  } 
+}
+          </pre>
+        </fieldset>
+
+        <fieldset>
+          <legend>화면 표시 텍스트 제어</legend>
+          <input id="input-m1-text" type="text" />
+          <button id="button-m1-text">텍스트 전송</button>
+          <pre>
+{ 
+  "event": "microwave-text", 
+  "data": { 
+    "to": 1 // 전자레인지 번호
+    "text": 'text' // 표시 문구 (a-z0-9)
+  } 
+}
+          </pre>
+        </fieldset>
+
+        <fieldset>
+          <legend>상부 전등 제어</legend>
+          <button id="button-m1-light-on">전등 켜기</button>
+          <button id="button-m1-light-off">전등 끄기</button>
+          <pre>
+{ 
+  "event": "microwave-light", 
+  "data": { 
+    "to": 1 // 전자레인지 번호
+    "on": true // 켜려면 true 끄려면 false 
+  } 
+}
+          </pre>
+        </fieldset>
+      </fieldset>
+    </fieldset>
+
+    <script src="index.js" type="module"></script>
+  </body>
+</html>

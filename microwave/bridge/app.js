@@ -103,7 +103,7 @@ async function main() {
     console.log(event, data);
     switch (event) {
       case 'microwave-text': {
-        serial.send(`d[${data}]`);
+        serial.send(`d[${data.text}]`);
         break;
       }
       case 'microwave-light': {
