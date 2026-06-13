@@ -7,7 +7,7 @@ const COL_COUNT = 7;
 const CELL_COUNT = ROW_COUNT * COL_COUNT;
 const FRAME_HEADER = [0xaa, 0x55];
 const FRAME_SIZE = FRAME_HEADER.length + CELL_COUNT;
-const DEFAULT_WS_URL = 'ws://localhost:9990/touch';
+const DEFAULT_WS_URL = 'wss://g161.ccc.vg/touch';
 const RECONNECT_DELAY_MS = 1000;
 
 function getArg(name, fallback = null) {
