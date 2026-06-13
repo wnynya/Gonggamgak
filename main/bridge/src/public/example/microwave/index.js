@@ -13,7 +13,7 @@ wsc.on('error', (error) => {
 });
 
 wsc.on('json', (con, event, data) => {
-  console.log(event, data);
+  //console.log(event, data);
 });
 
 wsc.open();

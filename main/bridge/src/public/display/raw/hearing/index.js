@@ -43,6 +43,10 @@ let delayIndex = 0;
 let spectrogramImage = null;
 let recognition = null;
 let transcriptText = '';
+let currentGain = 0;
+let lastSpeechTime = 0;
+let hearingWs = null;
+let hearingReconnectTimer = 0;
 
 function setStatus(text, state = 'idle') {
   statusElement.textContent = text;
@@ -136,6 +140,51 @@ function trimTranscript(text) {
   return Array.from(text).slice(-1000).join('');
 }
 
+function countLetters(text) {
+  return Array.from(text.replace(/\s/g, '')).length;
+}
+
+function getSpeechTextPerMinute(text, now = performance.now()) {
+  const letterCount = countLetters(text);
+
+  if (!lastSpeechTime || letterCount === 0) {
+    lastSpeechTime = now;
+    return 0;
+  }
+
+  const minutes = Math.max((now - lastSpeechTime) / 60000, 1 / 750);
+  lastSpeechTime = now;
+  return letterCount / minutes;
+}
+
+function connectHearingSocket() {
+  clearTimeout(hearingReconnectTimer);
+
+  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  hearingWs = new WebSocket(`${protocol}://${location.host}/hearing`);
+
+  hearingWs.addEventListener('close', () => {
+    hearingReconnectTimer = setTimeout(connectHearingSocket, 1200);
+  });
+}
+
+function sendSpeechData(text, now = performance.now()) {
+  const speechText = text.trim();
+
+  if (!speechText || hearingWs?.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  hearingWs.send(
+    JSON.stringify({
+      event: 'speech',
+      text: speechText,
+      tps: Number(getSpeechTextPerMinute(speechText, now).toFixed(2)),
+      gain: Number(currentGain.toFixed(2)),
+    }),
+  );
+}
+
 function showLatestSpeechChar(text) {
   const chars = Array.from(text.trim());
   textForeground.textContent = chars.at(-1) || '';
@@ -171,8 +220,11 @@ function startRecognition() {
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = navigator.language || 'ko-KR';
+  lastSpeechTime = 0;
 
   recognition.onresult = (event) => {
+    const now = performance.now();
+
     for (
       let index = event.resultIndex;
       index < event.results.length;
@@ -182,6 +234,7 @@ function startRecognition() {
       const text = result[0].transcript;
 
       showLatestSpeechChar(text);
+      sendSpeechData(text, now);
 
       if (result.isFinal) {
         appendSpeechText(text);
@@ -370,6 +423,7 @@ function render() {
   if (analyser) {
     analyser.getByteTimeDomainData(timeData);
     analyser.getByteFrequencyData(frequencyData);
+    currentGain = getCurrentGain(timeData);
     updateDelayBuffer();
   }
 
@@ -402,6 +456,19 @@ function stopStream() {
 
   analyser = null;
   gainNode = null;
+  currentGain = 0;
+  lastSpeechTime = 0;
+}
+
+function getCurrentGain(samples) {
+  let sum = 0;
+
+  for (const sample of samples) {
+    const normalized = byteToSignal(sample);
+    sum += normalized * normalized;
+  }
+
+  return clamp(Math.sqrt(sum / samples.length) * 3.2, 0, 1);
 }
 
 async function listAudioInputs(selectedDeviceId = deviceSelect.value) {
@@ -513,6 +580,7 @@ for (const canvas of Object.values(screens)) {
 }
 
 setInputGain();
+connectHearingSocket();
 
 if (!navigator.mediaDevices?.getUserMedia) {
   startButton.disabled = true;
