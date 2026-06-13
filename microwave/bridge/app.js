@@ -118,6 +118,10 @@ async function main() {
         }
         break;
       }
+      case 'microwave-serial': {
+        serial.send(data.text);
+        break;
+      }
     }
   });
   wsc.on('close', () => {
