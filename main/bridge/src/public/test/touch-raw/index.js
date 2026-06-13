@@ -1,4 +1,4 @@
-import WebsocketClient from '../../websocket-client.mjs';
+import WebsocketClient from '../../websocket-client.js';
 
 const LAT_COUNT = 7;
 const LON_COUNT = 12;
