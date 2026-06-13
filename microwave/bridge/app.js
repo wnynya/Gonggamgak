@@ -87,7 +87,7 @@ async function main() {
     return;
   }
 
-  id = args.i;
+  id = args.i * 1;
   const wsc = new WebSocketClient('wss://g161.ccc.vg/microwave');
 
   const serial = new Serial(args.s, { baudRate: 9600 });

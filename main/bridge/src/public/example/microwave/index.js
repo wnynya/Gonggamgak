@@ -17,6 +17,7 @@ wsc.on('json', (con, event, data) => {
 });
 
 wsc.open();
+window.wsc = wsc;
 
 const btn_m1h1on = document.querySelector('#button-m1-h1-on');
 const btn_m1h1off = document.querySelector('#button-m1-h1-off');
