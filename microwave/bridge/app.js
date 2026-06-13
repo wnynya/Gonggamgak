@@ -95,7 +95,7 @@ async function main() {
   wsc.on('open', () => {
     console.log(`ws open`);
   });
-  wsc.on('json', (event, data) => {
+  wsc.on('json', (con, event, data) => {
     console.log(event, data);
     if (data.to !== id) {
       return;
