@@ -178,8 +178,8 @@ function formatMatrix(matrix, frameNumber) {
 }
 
 function printMatrix(matrix, frameNumber) {
-  process.stdout.write('\x1Bc');
-  console.log(formatMatrix(matrix, frameNumber));
+  //process.stdout.write('\x1Bc');
+  //console.log(formatMatrix(matrix, frameNumber));
 }
 
 function readSerialTouchMatrix(serialPort, wsClient) {
