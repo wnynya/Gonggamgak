@@ -13,7 +13,7 @@ const DENSE_LAT_COUNT = (LAT_COUNT + 1) * LAT_DIVISIONS - 1;
 const canvas = document.querySelector('#sphere');
 const ctx = canvas.getContext('2d', { alpha: false });
 const statusElement = document.querySelector('#status');
-const wsc = new WebsocketClient('/main');
+const wsc = new WebsocketClient('wss:g161.ccc.vg/main');
 
 const targetValues = createValueGrid();
 const displayValues = createValueGrid();
