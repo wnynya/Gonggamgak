@@ -6,7 +6,7 @@ const signalState = document.querySelector('#signal-state');
 const streamState = document.querySelector('#stream-state');
 const peerCount = document.querySelector('#peer-count');
 
-const SIGNAL_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/webrtc/sight`;
+const SIGNAL_URL = `wss:g161.ccc.vg/webrtc/sight`;
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 const VIDEO_CONSTRAINTS = {
   width: { ideal: 1920 },
@@ -174,7 +174,9 @@ function tuneSender(sender, track) {
   track.contentHint = 'detail';
 
   const parameters = sender.getParameters();
-  parameters.encodings = parameters.encodings?.length ? parameters.encodings : [{}];
+  parameters.encodings = parameters.encodings?.length
+    ? parameters.encodings
+    : [{}];
   parameters.encodings[0].maxBitrate = VIDEO_MAX_BITRATE;
   parameters.encodings[0].maxFramerate = 30;
   parameters.encodings[0].scaleResolutionDownBy = 1;

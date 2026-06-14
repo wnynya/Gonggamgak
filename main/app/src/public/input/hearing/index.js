@@ -7,7 +7,7 @@ const peerCount = document.querySelector('#peer-count');
 const meter = document.querySelector('#meter');
 const meterCtx = meter.getContext('2d');
 
-const SIGNAL_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/webrtc/hearing`;
+const SIGNAL_URL = `wss:g161.ccc.vg/webrtc/hearing`;
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 const AUDIO_CONSTRAINTS = {
   echoCancellation: true,

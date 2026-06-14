@@ -58,7 +58,7 @@ function setup() {
 async function startWebRTCVideo() {
   const { default: WebRTCReceiver } = await import('/webrtc-receiver.js');
 
-  videoSource = new WebRTCReceiver('/webrtc/sight', {
+  videoSource = new WebRTCReceiver('wss://g161.ccc.vg/webrtc/sight', {
     role: 'sight-raw-display',
     sourceRole: 'sight-input',
     autoConnect: false,
