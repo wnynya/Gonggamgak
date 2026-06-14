@@ -7,8 +7,8 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
-    "dev": "node src/app.js -p 9501",
-    "dev29": "node src/app.js -p 2980"
+    "dev": "nodemon src/app.js -p 9501",
+    "dev29": "nodemon src/app.js -p 2980"
   },
   "dependencies": {
     "express": "^5.2.1",

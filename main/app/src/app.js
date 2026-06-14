@@ -2,8 +2,6 @@
 
 import http from 'node:http';
 import express from './express.js';
-import websocket from './websocket/websocket-router.js';
-
 let PORT = Number(process.env.PORT) || 80;
 for (let i = 0; i < process.argv.length; i++) {
   if (
@@ -16,9 +14,6 @@ for (let i = 0; i < process.argv.length; i++) {
   }
 }
 
-http
-  .createServer(express)
-  .listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`);
-  })
-  .on('upgrade', websocket);
+http.createServer(express).listen(PORT, () => {
+  console.log(`Server started at http://localhost:${PORT}`);
+});

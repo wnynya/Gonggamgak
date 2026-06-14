@@ -22,10 +22,6 @@ app.use(express.static(nodepath.resolve(__dirname, './public')));
 app.use(express.json());
 app.use(express.urlencoded());
 
-app.post('/email', async (req, res) => {});
-
-app.post('/text', async (req, res) => {});
-
 /* 오류 처리 */
 app.all('/{*all}', (req, res) => {
   throw new Error('404 Not Found');
