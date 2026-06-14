@@ -6,3 +6,5 @@ cd main/bridge
 npm i
 
 npm run dev
+
+pause

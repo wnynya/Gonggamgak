@@ -6,3 +6,5 @@ cd main/app
 npm i
 
 npm run dev
+
+pause
