@@ -1,5 +1,5 @@
 {
-  "name": "main-bridge",
+  "name": "main-app",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -7,11 +7,9 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
-    "dev": "nodemon src/app.js -p 9501",
-    "dev29": "nodemon src/app.js -p 2980"
+    "dev": "nodemon src/app.js -p 9502"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "ws": "^8.20.0"
+    "express": "^5.2.1"
   }
 }
