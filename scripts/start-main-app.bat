@@ -1,10 +1,9 @@
 @echo off
 
-cd %USERPROFILE%/Desktop/Gonggamgak
-cd main/app
+cd /d "%USERPROFILE%\Desktop\Gonggamgak\main\app"
 
-npm i
+call npm install
 
-npm run dev
+call npm run dev
 
 pause

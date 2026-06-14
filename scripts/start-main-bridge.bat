@@ -1,10 +1,9 @@
 @echo off
 
-cd %USERPROFILE%/Desktop/Gonggamgak
-cd main/bridge
+cd /d "%USERPROFILE%\Desktop\Gonggamgak\main\bridge"
 
-npm i
+call npm install
 
-npm run dev
+call npm run dev
 
 pause
