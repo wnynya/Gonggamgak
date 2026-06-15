@@ -4,6 +4,6 @@ cd /d "%USERPROFILE%\Desktop\Gonggamgak\touch\bridge"
 
 call npm install
 
-node test.js -s
+node test.js -s COM3
 
 pause

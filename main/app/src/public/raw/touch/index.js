@@ -6,7 +6,7 @@ const LONDIV = 2;
 const LATDIV = 2;
 const PMIN = 50;
 const PMAX = 150;
-const CALIBRATION_STABLE_DURATION = 3000;
+const CALIBRATION_STABLE_DURATION = 300;
 const CALIBRATION_STABLE_RANGE = 3;
 const PRESSURE_DEADZONE = 2;
 const PDEP = 0.5;
@@ -32,6 +32,7 @@ const PARTICLE_ALPHA_PRESSURE = 1;
 const PARTICLE_ALPHA_TARGET_BASE = 1;
 const PARTICLE_ALPHA_TARGET_PRESSURE = 1;
 const PARTICLE_HALO_ALPHA = 0;
+/*
 const PCOL = [
   { at: 0, color: [30, 0, 60] },
   { at: 0.5, color: [255, 0, 50] },
@@ -43,6 +44,18 @@ const PTCOL = [
   { at: 0.2, color: [255, 0, 50] },
   { at: 0.5, color: [255, 150, 0] },
   { at: 0.7, color: [255, 255, 255] },
+];*/
+const PCOL = [
+  { at: 0, color: [90, 20, 50] },
+  { at: 0.5, color: [190, 0, 255] },
+  { at: 0.8, color: [0, 30, 255] },
+  { at: 1.0, color: [0, 255, 255] },
+];
+const PTCOL = [
+  { at: 0, color: [90, 20, 50] },
+  { at: 0.2, color: [190, 0, 255] },
+  { at: 0.5, color: [0, 30, 255] },
+  { at: 0.7, color: [0, 255, 255] },
 ];
 
 const canvas = document.querySelector('#canvas');
