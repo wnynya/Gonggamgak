@@ -20,6 +20,7 @@
         start-microwave-bridge-2 실행해주세요.
       크롬 브라우저로 [https://jiiii-09.github.io/teun/] 주소 접속 후 전체화면으로 띄워주세요. (오른쪽으로 밀기, 틔운에 표시)
     2.1.2. 그램 16-1 (TV, 터디)
+      바탕화면->와그작_모니터1_송출용.toe 파일 열기->m1, m2 노드 클릭(하나씩)->오른쪽 창에서 Open as seperate window에 open 버튼 클릭
     2.1.3. 그램 16-2 (시각)
       크롬 브라우저로 [https://ggg.ccc.vg/input/sight/] 주소 접속 후 카메라 시작해주세요. 이 창은 띄운 채 가만히 두시면 됩니다.
       크롬 브라우저로 [https://ggg.ccc.vg/raw/sight/] 주소 접속 후 전체화면으로 띄워주세요.

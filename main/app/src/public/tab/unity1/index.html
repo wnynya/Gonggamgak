@@ -3,15 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="theme-color" content="#111111">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="InteractiveArt">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Unity WebGL Player | InteractiveArt</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="apple-touch-icon" href="TemplateData/webmemd-icon-192.png">
-    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="TemplateData/style.css">
   </head>
   <body>
@@ -64,11 +57,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/InteractiveArt1.loader.js";
+      var loaderUrl = buildUrl + "/InteractiveArt0.loader.js";
       var config = {
-        dataUrl: buildUrl + "/InteractiveArt1.data.unityweb",
-        frameworkUrl: buildUrl + "/InteractiveArt1.framework.js.unityweb",
-        codeUrl: buildUrl + "/InteractiveArt1.wasm.unityweb",
+        dataUrl: buildUrl + "/InteractiveArt0.data.unityweb",
+        frameworkUrl: buildUrl + "/InteractiveArt0.framework.js.unityweb",
+        codeUrl: buildUrl + "/InteractiveArt0.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "InteractiveArt",
@@ -132,14 +125,6 @@
             };
 
       document.body.appendChild(script);
-
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('./sw.js').catch(function(error) {
-            console.warn('Service worker registration failed:', error);
-          });
-        });
-      }
 
     </script>
   </body>
