@@ -170,7 +170,7 @@ function connectHearingSocket() {
   clearTimeout(hearingReconnectTimer);
 
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  hearingWs = new WebSocket(`${protocol}://${location.host}/hearing`);
+  hearingWs = new WebSocket(`wss://g161.ccc.vg/hearing`);
 
   hearingWs.addEventListener('close', () => {
     hearingReconnectTimer = setTimeout(connectHearingSocket, 1200);
