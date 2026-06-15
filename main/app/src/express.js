@@ -17,7 +17,22 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(nodepath.resolve(__dirname, './public')));
+app.use((req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+    'Surrogate-Control': 'no-store',
+  });
+  next();
+});
+
+app.use(
+  express.static(nodepath.resolve(__dirname, './public'), {
+    etag: false,
+    lastModified: false,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded());

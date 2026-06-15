@@ -4,11 +4,13 @@ const statusText = document.querySelector('#status');
 const channel = getChannel('source');
 const SIGNAL_URL = `wss://g161.ccc.vg/webrtc/tab${channel}`;
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+const SIGNAL_RECONNECT_DELAY = 1500;
 
 let ws;
 let localStream;
 let localPeerId = '';
 let started = false;
+let reconnectTimer = null;
 const peers = new Map();
 
 function getChannel(kind) {
@@ -42,6 +44,12 @@ function closePeer(peerId) {
 
   peer.pc.close();
   peers.delete(peerId);
+}
+
+function closeAllPeers() {
+  for (const peerId of peers.keys()) {
+    closePeer(peerId);
+  }
 }
 
 function createPeerConnection(peerId) {
@@ -113,6 +121,7 @@ function connectSignal() {
     return;
   }
 
+  clearReconnectTimer();
   ws = new WebSocket(SIGNAL_URL);
 
   ws.addEventListener('open', () => {
@@ -121,36 +130,65 @@ function connectSignal() {
   });
 
   ws.addEventListener('message', async (event) => {
-    const message = JSON.parse(event.data);
-    const from = message.data?.from;
+    try {
+      const message = JSON.parse(event.data);
+      const from = message.data?.from;
 
-    if (message.event === 'webrtc-peer-id') {
-      localPeerId = message.data?.id || '';
-    } else if (message.event === 'webrtc-receiver-ready') {
-      await makeOffer(from);
-    } else if (message.event === 'webrtc-answer') {
-      const peer = peers.get(from);
-      if (!peer) {
-        return;
+      if (message.event === 'webrtc-peer-id') {
+        localPeerId = message.data?.id || '';
+      } else if (message.event === 'webrtc-receiver-ready') {
+        await makeOffer(from);
+      } else if (message.event === 'webrtc-answer') {
+        const peer = peers.get(from);
+        if (!peer) {
+          return;
+        }
+
+        await peer.pc.setRemoteDescription(message.data);
+        await flushPendingCandidates(peer);
+        setStatus(`tab${channel}: 공유 중`);
+      } else if (message.event === 'webrtc-ice') {
+        await addIceCandidate(from, message.data);
+      } else if (message.event === 'webrtc-bye') {
+        closePeer(from);
       }
-
-      await peer.pc.setRemoteDescription(message.data);
-      await flushPendingCandidates(peer);
-      setStatus(`tab${channel}: 공유 중`);
-    } else if (message.event === 'webrtc-ice') {
-      await addIceCandidate(from, message.data);
-    } else if (message.event === 'webrtc-bye') {
-      closePeer(from);
+    } catch (error) {
+      console.error(error);
+      setStatus(`tab${channel}: 시그널 처리 오류`);
     }
   });
 
   ws.addEventListener('close', () => {
-    setStatus(`tab${channel}: 시그널 끊김`);
+    localPeerId = '';
+    closeAllPeers();
+    setStatus(`tab${channel}: 시그널 재연결 대기`);
+    scheduleSignalReconnect();
   });
 
   ws.addEventListener('error', () => {
     setStatus(`tab${channel}: 시그널 오류`);
+    ws.close();
   });
+}
+
+function scheduleSignalReconnect() {
+  if (!started || !localStream || reconnectTimer) {
+    return;
+  }
+
+  reconnectTimer = window.setTimeout(() => {
+    reconnectTimer = null;
+    connectSignal();
+  }, SIGNAL_RECONNECT_DELAY);
+}
+
+function clearReconnectTimer() {
+  if (!reconnectTimer) {
+    return;
+  }
+
+  window.clearTimeout(reconnectTimer);
+  reconnectTimer = null;
 }
 
 async function start() {
@@ -171,11 +209,14 @@ async function start() {
 
   const [videoTrack] = localStream.getVideoTracks();
   videoTrack.addEventListener('ended', () => {
-    for (const peerId of peers.keys()) {
-      closePeer(peerId);
-    }
+    clearReconnectTimer();
+    closeAllPeers();
 
     send('webrtc-bye', { id: localPeerId });
+    ws?.close();
+    ws = null;
+    localPeerId = '';
+    localStream = null;
     started = false;
     shareButton.classList.remove('is-sharing');
     shareButton.textContent = '화면 공유 선택';
