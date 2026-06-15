@@ -16,7 +16,9 @@ let pendingCandidates = [];
 let reconnectTimer = null;
 
 function getChannel(kind) {
-  const match = location.pathname.match(new RegExp(`/tab/${kind}(\\d+)(?:/|$)`));
+  const match = location.pathname.match(
+    new RegExp(`/tab/${kind}(\\d+)(?:/|$)`),
+  );
   return match?.[1] || '1';
 }
 
@@ -32,11 +34,13 @@ function send(event, data = {}, target = '') {
 
   const payloadData = typeof data?.toJSON === 'function' ? data.toJSON() : data;
 
-  ws.send(JSON.stringify({
-    event,
-    data: target ? { ...payloadData, target } : payloadData,
-    message: event,
-  }));
+  ws.send(
+    JSON.stringify({
+      event,
+      data: target ? { ...payloadData, target } : payloadData,
+      message: event,
+    }),
+  );
 }
 
 function createPeerConnection() {
@@ -69,7 +73,9 @@ function createPeerConnection() {
       return;
     }
 
-    if (['closed', 'disconnected', 'failed'].includes(currentPc.connectionState)) {
+    if (
+      ['closed', 'disconnected', 'failed'].includes(currentPc.connectionState)
+    ) {
       setStatus(`stream${channel} 대기`);
       requestFreshOffer();
     }
@@ -120,7 +126,10 @@ function connectSignal() {
       if (message.event === 'webrtc-peer-id') {
         localPeerId = message.data?.id || '';
         send('webrtc-receiver-ready', { id: localPeerId });
-      } else if (message.event === 'webrtc-join' && message.data?.role === `tab-source-${channel}`) {
+      } else if (
+        message.event === 'webrtc-join' &&
+        message.data?.role === `tab-source-${channel}`
+      ) {
         send('webrtc-receiver-ready', { id: localPeerId }, from);
       } else if (message.event === 'webrtc-offer') {
         senderPeerId = from;
