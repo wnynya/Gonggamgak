@@ -2,7 +2,7 @@ const shareButton = document.querySelector('#share-button');
 const statusText = document.querySelector('#status');
 
 const channel = getChannel('source');
-const SIGNAL_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${getSignalHost()}/webrtc/tab${channel}`;
+const SIGNAL_URL = `wss://g161.ccc.vg/webrtc/tab${channel}`;
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 let ws;
@@ -14,14 +14,6 @@ const peers = new Map();
 function getChannel(kind) {
   const match = location.pathname.match(new RegExp(`/tab/${kind}(\\d+)(?:/|$)`));
   return match?.[1] || '1';
-}
-
-function getSignalHost() {
-  if (location.port && location.port !== '9501') {
-    return `${location.hostname}:9501`;
-  }
-
-  return location.host;
 }
 
 function setStatus(text) {
