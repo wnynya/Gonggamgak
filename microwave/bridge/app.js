@@ -48,6 +48,23 @@ function formatPort(port) {
     : port.path;
 }
 
+let serial;
+let huun = false;
+function huu() {
+  if (huun) {
+    return;
+  }
+  huun = true;
+  let i = Math.random() > 0.5 ? 1 : 2;
+  serial.send(`h${i}[on]`);
+  setTimeout(() => {
+    serial.send(`h${i}[off]`);
+  }, 3000);
+  setTimeout(() => {
+    huun = false;
+  }, 5000);
+}
+
 async function listSerialPorts() {
   const ports = await Serial.list();
 
@@ -90,7 +107,7 @@ async function main() {
   id = args.i * 1;
   const wsc = new WebSocketClient('wss://g161.ccc.vg/microwave');
 
-  const serial = new Serial(args.s, { baudRate: 9600 });
+  serial = new Serial(args.s, { baudRate: 9600 });
 
   wsc.on('open', () => {
     console.log(`ws open`);
@@ -147,6 +164,9 @@ async function main() {
         from: id,
         open: data == 'open',
       });
+      if (data == 'open') {
+        huu();
+      }
     }
   });
   serial.on('error', (error) => {
