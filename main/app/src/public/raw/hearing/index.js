@@ -30,6 +30,7 @@ const colorStops = [
   [255, 226, 58],
   [255, 255, 255],
 ];
+const colorValueBoost = 0.25;
 
 let audioContext = null;
 let analyser = null;
@@ -88,7 +89,7 @@ function resizeCanvases() {
 }
 
 function colorForValue(value) {
-  const scaled = clamp(value, 0, 1) * (colorStops.length - 1);
+  const scaled = clamp(value + colorValueBoost, 0, 1) * (colorStops.length - 1);
   const index = Math.min(Math.floor(scaled), colorStops.length - 2);
   const local = scaled - index;
   const from = colorStops[index];
@@ -348,7 +349,9 @@ function drawSpectrogram() {
   for (let y = 0; y < height; y += 1) {
     const bin = Math.floor((1 - y / Math.max(1, height - 1)) * (limit - 1));
     const value = frequencyData[bin] / 255;
-    const scaled = clamp(value * 1.25, 0, 1) * (colorStops.length - 1);
+    const scaled =
+      clamp(value * 1.25 + colorValueBoost, 0, 1) *
+      (colorStops.length - 1);
     const index = Math.min(Math.floor(scaled), colorStops.length - 2);
     const local = scaled - index;
     const from = colorStops[index];
