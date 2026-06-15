@@ -14,7 +14,9 @@ let reconnectTimer = null;
 const peers = new Map();
 
 function getChannel(kind) {
-  const match = location.pathname.match(new RegExp(`/tab/${kind}(\\d+)(?:/|$)`));
+  const match = location.pathname.match(
+    new RegExp(`/tab/${kind}(\\d+)(?:/|$)`),
+  );
   return match?.[1] || '1';
 }
 
@@ -29,11 +31,13 @@ function send(event, data = {}, target = '') {
 
   const payloadData = typeof data?.toJSON === 'function' ? data.toJSON() : data;
 
-  ws.send(JSON.stringify({
-    event,
-    data: target ? { ...payloadData, target } : payloadData,
-    message: event,
-  }));
+  ws.send(
+    JSON.stringify({
+      event,
+      data: target ? { ...payloadData, target } : payloadData,
+      message: event,
+    }),
+  );
 }
 
 function closePeer(peerId) {
@@ -200,9 +204,9 @@ async function start() {
   setStatus(`tab${channel}: 화면 선택 대기`);
   localStream = await navigator.mediaDevices.getDisplayMedia({
     video: {
-      frameRate: { ideal: 30, max: 60 },
-      width: { ideal: 1920 },
-      height: { ideal: 1080 },
+      frameRate: { ideal: 24, max: 24 },
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
     },
     audio: false,
   });
