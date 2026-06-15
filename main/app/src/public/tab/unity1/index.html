@@ -75,7 +75,10 @@
         productName: 'InteractiveArt',
         productVersion: '0.1.0',
         showBanner: unityShowBanner,
+        runInBackground: true,
       };
+
+      keepUnityRunningWithoutFocus();
 
       // By default, Unity keeps WebGL canvas render target size matched with
       // the DOM size of the canvas element (scaled by window.devicePixelRatio)
@@ -124,6 +127,8 @@
         })
           .then((unityInstance) => {
             loadingBar.style.display = 'none';
+            unityInstance.Module.runInBackground = true;
+            unityInstance.Module.shouldRunInBackground = true;
             fullscreenButton.onclick = () => {
               unityInstance.SetFullscreen(1);
             };
@@ -134,6 +139,53 @@
       };
 
       document.body.appendChild(script);
+
+      function keepUnityRunningWithoutFocus() {
+        defineReadonlyDocumentValue('hidden', false);
+        defineReadonlyDocumentValue('webkitHidden', false);
+        defineReadonlyDocumentValue('visibilityState', 'visible');
+        defineReadonlyDocumentValue('webkitVisibilityState', 'visible');
+
+        try {
+          document.hasFocus = function () {
+            return true;
+          };
+        } catch (error) {
+          console.warn('document.hasFocus override failed:', error);
+        }
+
+        ['visibilitychange', 'webkitvisibilitychange', 'blur', 'pagehide'].forEach(
+          function (eventName) {
+            window.addEventListener(eventName, stopUnityPauseEvent, true);
+            document.addEventListener(eventName, stopUnityPauseEvent, true);
+          },
+        );
+
+        window.addEventListener(
+          'focus',
+          function () {
+            canvas.focus();
+          },
+          true,
+        );
+      }
+
+      function defineReadonlyDocumentValue(name, value) {
+        try {
+          Object.defineProperty(document, name, {
+            configurable: true,
+            get: function () {
+              return value;
+            },
+          });
+        } catch (error) {
+          console.warn(name + ' override failed:', error);
+        }
+      }
+
+      function stopUnityPauseEvent(event) {
+        event.stopImmediatePropagation();
+      }
     </script>
   </body>
 </html>
