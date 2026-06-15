@@ -11,12 +11,7 @@ wsc.on('close', () => {
 wsc.on('error', (error) => {
   console.log('ws error', error);
 });
-
-wsc.on('json', (con, event, data) => {
-  if (event.startsWith('microwave')) {
-    console.log(data);
-  }
-});
+wsc.on('json', (con, event, data) => {});
 
 wsc.open();
 window.wsc = wsc;
