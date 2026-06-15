@@ -2,6 +2,7 @@ const startButton = document.querySelector('#start');
 const deviceSelect = document.querySelector('#audioInput');
 const inputGain = document.querySelector('#inputGain');
 const inputGainValue = document.querySelector('#inputGainValue');
+const transcriptLimitInput = document.querySelector('#transcriptLimit');
 const statusElement = document.querySelector('#status');
 const textBackground = document.querySelector('#text .background');
 const textForeground = document.querySelector('#text .foreground');
@@ -42,7 +43,7 @@ let delayBuffer = new Float32Array(24000);
 let delayIndex = 0;
 let spectrogramImage = null;
 let recognition = null;
-let transcriptText = '';
+let transcriptChars = [];
 let currentGain = 0;
 let lastSpeechTime = 0;
 let hearingWs = null;
@@ -99,6 +100,10 @@ function colorForValue(value) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function getTranscriptLimit() {
+  return Math.max(1, Math.floor(Number(transcriptLimitInput.value) || 1000));
+}
+
 function byteToSignal(value) {
   return (value - 128) / 128;
 }
@@ -136,8 +141,12 @@ function setInputGain(value = inputGain.value) {
   }
 }
 
-function trimTranscript(text) {
-  return Array.from(text).slice(-1000).join('');
+function trimTranscriptChars() {
+  const limit = getTranscriptLimit();
+
+  if (transcriptChars.length > limit) {
+    transcriptChars = transcriptChars.slice(-limit);
+  }
 }
 
 function countLetters(text) {
@@ -185,19 +194,36 @@ function sendSpeechData(text, now = performance.now()) {
   );
 }
 
-function showLatestSpeechChar(text) {
+function showLatestSpeechChar(text, gain = currentGain) {
   const chars = Array.from(text.trim());
   textForeground.textContent = chars.at(-1) || '';
+  textForeground.style.color = colorForValue(gain);
 }
 
-function appendSpeechText(text) {
+function renderTranscript() {
+  const fragment = document.createDocumentFragment();
+
+  for (const item of transcriptChars) {
+    const span = document.createElement('span');
+    span.textContent = item.char;
+    span.style.setProperty('--speech-color', item.color);
+    fragment.append(span);
+  }
+
+  textBackground.replaceChildren(fragment);
+  textBackground.scrollTop = textBackground.scrollHeight;
+}
+
+function appendSpeechText(text, gain = currentGain) {
   if (!text) {
     return;
   }
 
-  transcriptText = trimTranscript(`${transcriptText}${text}`);
-  textBackground.textContent = transcriptText;
-  textBackground.scrollTop = textBackground.scrollHeight;
+  const color = colorForValue(gain);
+  const chars = Array.from(text);
+  transcriptChars.push(...chars.map((char) => ({ char, color })));
+  trimTranscriptChars();
+  renderTranscript();
 }
 
 function stopRecognition() {
@@ -232,12 +258,13 @@ function startRecognition() {
     ) {
       const result = event.results[index];
       const text = result[0].transcript;
+      const speechGain = currentGain;
 
-      showLatestSpeechChar(text);
+      showLatestSpeechChar(text, speechGain);
       sendSpeechData(text, now);
 
       if (result.isFinal) {
-        appendSpeechText(text);
+        appendSpeechText(text, speechGain);
       }
     }
   };
@@ -264,23 +291,26 @@ function drawWaveform() {
   const startIndex = timeData.length - sampleCount;
 
   clear(ctx, width, height);
-  ctx.strokeStyle = '#fff';
   ctx.lineWidth = Math.max(1, width / 360);
-  ctx.beginPath();
 
-  for (let i = 0; i < sampleCount; i += 1) {
+  for (let i = 1; i < sampleCount; i += 1) {
+    const prevIndex = startIndex + i - 1;
     const sourceIndex = startIndex + i;
-    const x = (i / Math.max(1, sampleCount - 1)) * width;
-    const y = mid + byteToSignal(timeData[sourceIndex]) * mid * 0.86;
+    const prevSignal = byteToSignal(timeData[prevIndex]);
+    const signal = byteToSignal(timeData[sourceIndex]);
+    const x1 = ((i - 1) / Math.max(1, sampleCount - 1)) * width;
+    const y1 = mid + prevSignal * mid * 0.86;
+    const x2 = (i / Math.max(1, sampleCount - 1)) * width;
+    const y2 = mid + signal * mid * 0.86;
 
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
+    ctx.strokeStyle = colorForValue(
+      clamp(Math.max(Math.abs(prevSignal), Math.abs(signal)) * 1.6, 0, 1),
+    );
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
   }
-
-  ctx.stroke();
 }
 
 function drawFft() {
@@ -362,23 +392,32 @@ function drawXy() {
   ctx.lineTo(width, centerY);
   ctx.stroke();
 
-  ctx.strokeStyle = '#fff';
   ctx.lineWidth = Math.max(1, width / 430);
-  ctx.beginPath();
 
-  for (let i = 0; i < sampleCount; i += 1) {
+  for (let i = 1; i < sampleCount; i += 1) {
+    const prevIndex = startIndex + i - 1;
     const sourceIndex = startIndex + i;
-    const x = centerX + byteToSignal(timeData[sourceIndex]) * radius;
-    const y = centerY + delayedData[sourceIndex] * radius;
+    const prevXSignal = byteToSignal(timeData[prevIndex]);
+    const prevYSignal = delayedData[prevIndex];
+    const xSignal = byteToSignal(timeData[sourceIndex]);
+    const ySignal = delayedData[sourceIndex];
+    const x1 = centerX + prevXSignal * radius;
+    const y1 = centerY + prevYSignal * radius;
+    const x2 = centerX + xSignal * radius;
+    const y2 = centerY + ySignal * radius;
+    const value = Math.max(
+      Math.abs(prevXSignal),
+      Math.abs(prevYSignal),
+      Math.abs(xSignal),
+      Math.abs(ySignal),
+    );
 
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
+    ctx.strokeStyle = colorForValue(clamp(value * 1.35, 0, 1));
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
   }
-
-  ctx.stroke();
 }
 
 function drawCircularFft() {
@@ -573,6 +612,10 @@ startButton.addEventListener('click', start);
 cover.addEventListener('click', start);
 deviceSelect.addEventListener('change', restartAudio);
 inputGain.addEventListener('input', () => setInputGain());
+transcriptLimitInput.addEventListener('input', () => {
+  trimTranscriptChars();
+  renderTranscript();
+});
 window.addEventListener('resize', resizeCanvases);
 
 for (const canvas of Object.values(screens)) {
