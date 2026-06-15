@@ -5,6 +5,9 @@ const LON_COUNT = 12;
 const MIN_VALUE = 50;
 const MAX_VALUE = 150;
 const PRESS_DEPTH = 0.2;
+const BASELINE_WINDOW_MS = 5000;
+const BASELINE_MIN_COVERAGE_MS = 4500;
+const BASELINE_MAX_DEVIATION = 20;
 const LON_DIVISIONS = 5;
 const LAT_DIVISIONS = 5;
 const DENSE_LON_COUNT = LON_COUNT * LON_DIVISIONS;
@@ -17,12 +20,20 @@ const wsc = new WebsocketClient('wss:g161.ccc.vg/main');
 
 const targetValues = createValueGrid();
 const displayValues = createValueGrid();
+const baseValues = createValueGrid(null);
+const valueHistories = createHistoryGrid();
 let frameCount = 0;
 let lastTouchAt = 0;
 
-function createValueGrid() {
+function createValueGrid(initialValue = 0) {
   return Array.from({ length: LON_COUNT }, () =>
-    Array.from({ length: LAT_COUNT }, () => 0),
+    Array.from({ length: LAT_COUNT }, () => initialValue),
+  );
+}
+
+function createHistoryGrid() {
+  return Array.from({ length: LON_COUNT }, () =>
+    Array.from({ length: LAT_COUNT }, () => []),
   );
 }
 
@@ -109,6 +120,46 @@ function normalizeTouchData(data) {
   return null;
 }
 
+function updateBaseline(lon, lat, value, now) {
+  const history = valueHistories[lon][lat];
+
+  history.push({ at: now, value });
+
+  while (history.length > 0 && now - history[0].at > BASELINE_WINDOW_MS) {
+    history.shift();
+  }
+
+  const oldest = history[0];
+
+  if (!oldest || now - oldest.at < BASELINE_MIN_COVERAGE_MS) {
+    return baseValues[lon][lat];
+  }
+
+  const sum = history.reduce((total, sample) => total + sample.value, 0);
+  const average = sum / history.length;
+  const minValue = Math.min(...history.map((sample) => sample.value));
+  const maxValue = Math.max(...history.map((sample) => sample.value));
+
+  if (maxValue - minValue <= BASELINE_MAX_DEVIATION) {
+    baseValues[lon][lat] = average;
+  }
+
+  return baseValues[lon][lat];
+}
+
+function getPressStrength(lon, lat, value, now) {
+  const base = updateBaseline(lon, lat, value, now);
+
+  if (!Number.isFinite(base)) {
+    return 0;
+  }
+
+  const pressAmount = Math.max(0, value - base);
+  const pressRange = Math.max(1, MAX_VALUE - base);
+
+  return clamp(pressAmount / pressRange, 0, 1);
+}
+
 function updateTouch(data) {
   const values = normalizeTouchData(data);
 
@@ -116,16 +167,18 @@ function updateTouch(data) {
     return;
   }
 
+  const now = performance.now();
+
   for (let lon = 0; lon < LON_COUNT; lon += 1) {
     for (let lat = 0; lat < LAT_COUNT; lat += 1) {
       const value = Number(values[lon][lat]);
       targetValues[lon][lat] = Number.isFinite(value)
-        ? clamp(value, MIN_VALUE, MAX_VALUE)
+        ? getPressStrength(lon, lat, clamp(value, MIN_VALUE, MAX_VALUE), now)
         : 0;
     }
   }
 
-  lastTouchAt = performance.now();
+  lastTouchAt = now;
 }
 
 function projectSpherePoint(theta, phi, strength, value, radius, rotation) {
@@ -212,7 +265,7 @@ function getDensePoint(lonIndex, latIndex, radius, rotation) {
   const lonPosition = lonRatio * LON_COUNT;
   const latPosition = latRatio * (LAT_COUNT + 1) - 1;
   const value = getInterpolatedValue(lonPosition, latPosition);
-  const strength = clamp((value - MIN_VALUE) / (MAX_VALUE - MIN_VALUE), 0, 1);
+  const strength = clamp(value, 0, 1);
   const theta = Math.PI * latRatio;
   const phi = Math.PI * 2 * lonRatio;
 
