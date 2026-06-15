@@ -11,6 +11,8 @@ const out1 = new WebSocketServer();
 const webrtc = new WebSocketServer();
 const webrtcSight = new WebSocketServer();
 const webrtcHearing = new WebSocketServer();
+const webrtcTab1 = new WebSocketServer();
+const webrtcTab2 = new WebSocketServer();
 const press = new WebSocketServer();
 const microwave = new WebSocketServer();
 
@@ -93,6 +95,8 @@ function relayWebrtc(server, label) {
 relayWebrtc(webrtc, 'webrtc');
 relayWebrtc(webrtcSight, 'webrtc/sight');
 relayWebrtc(webrtcHearing, 'webrtc/hearing');
+relayWebrtc(webrtcTab1, 'webrtc/tab1');
+relayWebrtc(webrtcTab2, 'webrtc/tab2');
 
 export {
   hearing,
@@ -104,6 +108,8 @@ export {
   webrtc,
   webrtcSight,
   webrtcHearing,
+  webrtcTab1,
+  webrtcTab2,
   press,
 };
 export { microwave };

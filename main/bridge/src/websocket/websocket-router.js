@@ -22,6 +22,8 @@ import {
   webrtc,
   webrtcSight,
   webrtcHearing,
+  webrtcTab1,
+  webrtcTab2,
 } from './wss.js';
 use('/hearing', hearing);
 use('/sight', sight);
@@ -32,6 +34,8 @@ use('/out1', out1);
 use('/webrtc', webrtc);
 use('/webrtc/sight', webrtcSight);
 use('/webrtc/hearing', webrtcHearing);
+use('/webrtc/tab1', webrtcTab1);
+use('/webrtc/tab2', webrtcTab2);
 
 import { press } from './wss.js';
 use('/press', press);
