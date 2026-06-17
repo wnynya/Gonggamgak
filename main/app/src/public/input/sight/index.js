@@ -9,9 +9,9 @@ const peerCount = document.querySelector('#peer-count');
 const SIGNAL_URL = `wss:g161.ccc.vg/webrtc/sight`;
 const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 const VIDEO_CONSTRAINTS = {
-  width: { ideal: 1920 },
-  height: { ideal: 1080 },
-  frameRate: { ideal: 30, max: 30 },
+  width: { ideal: 850 },
+  height: { ideal: 480 },
+  frameRate: { ideal: 60, max: 60 },
   facingMode: 'environment',
 };
 const VIDEO_MAX_BITRATE = 6_000_000;
