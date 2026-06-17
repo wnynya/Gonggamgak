@@ -12,7 +12,7 @@ let source;
 startButton.addEventListener('click', () => {
   startButton.classList.add('is-hidden');
 
-  source = new WebRTCReceiver('/webrtc/sight', {
+  source = new WebRTCReceiver('wss://g161.ccc.vg/webrtc/sight', {
     role: 'sight-raw-display',
     sourceRole: 'sight-input',
     autoConnect: false,
